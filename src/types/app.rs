@@ -1,15 +1,31 @@
 use anyhow::Result;
 use orion::pwhash::{self, hash_password_verify, Password, PasswordHash};
-use sqlx::prelude::*;
+use sqlx::{prelude::*, sqlite::SqlitePool};
 
 #[derive(Debug, FromRow)]
 pub struct App {
-    pub master_password_hash: String,
+    pub master_password_hash: Option<String>,
+    pub db: &'static SqlitePool,
 }
 
 impl App {
-    pub async fn set_master_password(&self) -> Result<()> {
-        todo!()
+    pub fn new(db: &'static SqlitePool) -> Self {
+        Self {
+            master_password_hash: None,
+            db,
+        }
+    }
+
+    pub async fn set_master_password(&self, password: &str) -> Result<()> {
+        let password_hash = hash_password(password)?;
+
+        Ok(sqlx::query!(
+            "insert into app (master_password_hash) values  (?)",
+            password_hash
+        )
+        .execute(self.db)
+        .await
+        .map(|_| ())?)
     }
 }
 

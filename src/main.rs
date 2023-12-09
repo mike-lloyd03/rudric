@@ -12,10 +12,12 @@ async fn main() -> Result<()> {
 
     match cli.command {
         cli::Command::Init => {
+            // TODO: Check if db is already initialized.
+
             let master_password1: String = Input::with_theme(&ColorfulTheme::default())
                 .with_prompt("Set a master password")
                 .validate_with(|a: &String| -> Result<()> {
-                    if a.len() > 8 {
+                    if a.len() >= 8 {
                         Ok(())
                     } else {
                         bail!("Password must be minimum 8 characters")
@@ -42,7 +44,10 @@ async fn main() -> Result<()> {
                 bail!("Passwords do not match.")
             }
 
-            // db::init().await?;
+            let db = db::init().await?;
+
+            let app = types::app::App::new(&db);
+            app.set_master_password(&master_password1).await;
         }
         cli::Command::Create => todo!(),
         cli::Command::Get => todo!(),
