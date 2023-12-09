@@ -10,7 +10,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Command {
     Init,
-    Create,
+    Create { Key: String, Value: String },
     Get,
     Update,
     Delete,

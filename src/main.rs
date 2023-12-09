@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
+use types::secret::Secret;
 
 mod cli;
 mod db;
@@ -49,7 +50,16 @@ async fn main() -> Result<()> {
             let app = types::app::App::new(&db);
             app.set_master_password(&master_password1).await;
         }
-        cli::Command::Create => todo!(),
+        cli::Command::Create {
+            Key: key,
+            Value: value,
+        } => {
+            let db = db::connect().await?;
+            let sec = Secret::new(&key, &value);
+            if let Err(e) = sec.store(&db, "abcdefg").await {
+                eprintln!("{}", e);
+            }
+        }
         cli::Command::Get => todo!(),
         cli::Command::Update => todo!(),
         cli::Command::Delete => todo!(),

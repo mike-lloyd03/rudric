@@ -3,13 +3,13 @@ use orion::pwhash::{self, hash_password_verify, Password, PasswordHash};
 use sqlx::{prelude::*, sqlite::SqlitePool};
 
 #[derive(Debug, FromRow)]
-pub struct App {
+pub struct App<'a> {
     pub master_password_hash: Option<String>,
-    pub db: &'static SqlitePool,
+    pub db: &'a SqlitePool,
 }
 
-impl App {
-    pub fn new(db: &'static SqlitePool) -> Self {
+impl<'a> App<'a> {
+    pub fn new(db: &'a SqlitePool) -> Self {
         Self {
             master_password_hash: None,
             db,
