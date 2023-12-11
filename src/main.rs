@@ -52,9 +52,13 @@ async fn main() -> Result<()> {
             let app = types::app::App::new(&db);
             app.set_master_password(&master_password1).await;
         }
-        cli::Command::Create { name, value } => {
+        cli::Command::Create {
+            name,
+            value,
+            description,
+        } => {
             let db = db::connect().await?;
-            let sec = ClearTextSecret::new(&name, &value);
+            let sec = ClearTextSecret::new(&name, &value, description);
             let encrypted = sec.to_encrypted(SECRET_KEY)?;
             if let Err(e) = encrypted.store(&db).await {
                 eprintln!("{}", e);
@@ -67,8 +71,23 @@ async fn main() -> Result<()> {
 
             println!("{}", cleartext.value)
         }
-        cli::Command::Update => todo!(),
-        cli::Command::Delete => todo!(),
+        cli::Command::Edit => todo!(),
+        cli::Command::Delete { name } => {
+            let db = db::connect().await?;
+            let sec = Secret::get(&db, &name).await?;
+            sec.delete(&db).await?;
+        }
+        cli::Command::List => {
+            let db = db::connect().await?;
+            let secrets = Secret::get_all(&db).await?;
+            for secret in secrets {
+                println!(
+                    "{}\t\t{}",
+                    secret.name,
+                    secret.description.unwrap_or_default()
+                )
+            }
+        }
     }
 
     Ok(())

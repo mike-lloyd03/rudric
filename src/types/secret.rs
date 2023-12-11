@@ -8,18 +8,21 @@ pub struct Secret {
     pub id: Option<i64>,
     pub name: String,
     pub value: String,
+    pub description: Option<String>,
 }
 #[derive(Debug)]
 pub struct ClearTextSecret {
     pub name: String,
     pub value: String,
+    pub description: Option<String>,
 }
 
 impl ClearTextSecret {
-    pub fn new(name: &str, value: &str) -> Self {
+    pub fn new(name: &str, value: &str, description: Option<String>) -> Self {
         Self {
             name: name.into(),
             value: value.into(),
+            description,
         }
     }
 
@@ -38,6 +41,7 @@ impl ClearTextSecret {
             id: None,
             name: self.name.clone(),
             value: encoded,
+            description: self.description.clone(),
         })
     }
 }
@@ -50,17 +54,27 @@ impl Secret {
             .context("Failed to fetch secret from database")
     }
 
+    pub async fn get_all(db: &SqlitePool) -> Result<Vec<Self>> {
+        sqlx::query_as!(Self, "select * from secrets")
+            .fetch_all(db)
+            .await
+            .context("Failed to fetch all secrets from database")
+    }
+
     pub async fn store(&self, db: &SqlitePool) -> Result<()> {
-        match sqlx::query!(
-            "insert into secrets (name, value) values (?, ?)",
+        if let Err(e) = sqlx::query!(
+            "insert into secrets (name, value, description) values (?, ?, ?)",
             self.name,
-            self.value
+            self.value,
+            self.description
         )
         .execute(db)
         .await
+        .context("Failed to store secret")
         {
-            Ok(_) => Ok(()),
-            Err(e) => bail!(e),
+            Err(e)
+        } else {
+            Ok(())
         }
     }
 
@@ -79,6 +93,19 @@ impl Secret {
         Ok(ClearTextSecret {
             name: self.name.clone(),
             value: cleartext_value.to_string(),
+            description: self.description.clone(),
         })
+    }
+
+    pub async fn delete(&self, db: &SqlitePool) -> Result<()> {
+        if let Err(e) = sqlx::query!("delete from secrets where name = ?", self.name)
+            .execute(db)
+            .await
+            .context("Failed to delete secret")
+        {
+            Err(e)
+        } else {
+            Ok(())
+        }
     }
 }

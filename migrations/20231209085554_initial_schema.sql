@@ -5,5 +5,6 @@ create table app (
 create table secrets (
     id int primary key,
     name text not null unique,
-    value text not null
+    value text not null,
+    description text
 );
