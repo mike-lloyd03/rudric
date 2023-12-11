@@ -1,11 +1,13 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
-use types::secret::Secret;
+use types::secret::{ClearTextSecret, Secret};
 
 mod cli;
 mod db;
 mod types;
+
+const SECRET_KEY: &str = "abcdefghijklmnopqrstuvwxyzqwerty";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -50,17 +52,21 @@ async fn main() -> Result<()> {
             let app = types::app::App::new(&db);
             app.set_master_password(&master_password1).await;
         }
-        cli::Command::Create {
-            Key: key,
-            Value: value,
-        } => {
+        cli::Command::Create { name, value } => {
             let db = db::connect().await?;
-            let sec = Secret::new(&key, &value);
-            if let Err(e) = sec.store(&db, "abcdefg").await {
+            let sec = ClearTextSecret::new(&name, &value);
+            let encrypted = sec.to_encrypted(SECRET_KEY)?;
+            if let Err(e) = encrypted.store(&db).await {
                 eprintln!("{}", e);
             }
         }
-        cli::Command::Get => todo!(),
+        cli::Command::Get { name } => {
+            let db = db::connect().await?;
+            let sec = Secret::get(&db, &name).await?;
+            let cleartext = sec.to_cleartext(SECRET_KEY)?;
+
+            println!("{}", cleartext.value)
+        }
         cli::Command::Update => todo!(),
         cli::Command::Delete => todo!(),
     }
