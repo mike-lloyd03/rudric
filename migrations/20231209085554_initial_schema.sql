@@ -1,5 +1,6 @@
 create table user (
-    master_password_hash blob not null,
+    id int primary key not null,
+    master_password_hash text not null,
     salt blob not null
 );
 

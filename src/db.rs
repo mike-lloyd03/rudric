@@ -10,7 +10,9 @@ pub async fn init() -> Result<SqlitePool> {
         Err(error) => bail!("error: {}", error),
     }
 
-    connect().await
+    let db = connect().await?;
+    sqlx::migrate!().run(&db).await?;
+    Ok(db)
 }
 
 pub async fn exists() -> Result<bool> {

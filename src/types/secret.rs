@@ -1,6 +1,7 @@
+use orion::kex;
 use sqlx::{prelude::*, SqlitePool};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 
 #[derive(Debug, FromRow)]
 pub struct Secret {
@@ -25,15 +26,9 @@ impl ClearTextSecret {
         }
     }
 
-    pub fn to_encrypted(&self, key: &str) -> Result<Secret> {
-        if key.len() < 32 {
-            bail!("Key length must be 32 bytes minimum");
-        }
-
-        let secret_key = orion::aead::SecretKey::from_slice(key.as_bytes())
-            .context("failed to create secret key")?;
-        let encrypted_bytes = orion::aead::seal(&secret_key, self.value.as_bytes())
-            .context("failed to seal input string")?;
+    pub fn to_encrypted(&self, key: &kex::SecretKey) -> Result<Secret> {
+        let encrypted_bytes =
+            orion::aead::seal(key, self.value.as_bytes()).context("failed to seal input string")?;
 
         Ok(Secret {
             id: None,
@@ -72,14 +67,8 @@ impl Secret {
         .context("Failed to store secret")
     }
 
-    pub fn to_cleartext(&self, key: &str) -> Result<ClearTextSecret> {
-        if key.len() < 32 {
-            bail!("Key length must be 32 bytes minimum");
-        }
-
-        let secret_key = orion::aead::SecretKey::from_slice(key.as_bytes())
-            .context("failed to create secret key")?;
-        let cleartext_value_bytes = orion::aead::open(&secret_key, &self.value)?;
+    pub fn to_cleartext(&self, key: &kex::SecretKey) -> Result<ClearTextSecret> {
+        let cleartext_value_bytes = orion::aead::open(key, &self.value)?;
         let cleartext_value = std::str::from_utf8(&cleartext_value_bytes)?;
 
         Ok(ClearTextSecret {

@@ -1,17 +1,16 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
+use sqlx::SqlitePool;
 use types::{
     secret::{ClearTextSecret, Secret},
-    user,
+    user::{self, User},
 };
 
 mod cli;
 mod crypto;
 mod db;
 mod types;
-
-const SECRET_KEY: &str = "abcdefghijklmnopqrstuvwxyzqwerty";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -35,8 +34,7 @@ async fn main() -> Result<()> {
                     }
                 })
                 .report(false)
-                .interact_text()
-                .unwrap();
+                .interact_text()?;
 
             let master_password2: String = Input::with_theme(&ColorfulTheme::default())
                 .with_prompt("Re-enter")
@@ -48,8 +46,7 @@ async fn main() -> Result<()> {
                     }
                 })
                 .report(false)
-                .interact_text()
-                .unwrap();
+                .interact_text()?;
 
             if master_password1 != master_password2 {
                 bail!("Passwords do not match.")
@@ -67,16 +64,24 @@ async fn main() -> Result<()> {
             description,
         } => {
             let db = db::connect().await?;
+            let input_password = read_password()?;
+            let user = authenticate_user(&db, &input_password).await?;
+            let key = user.derive_key(&input_password)?;
+
             let sec = ClearTextSecret::new(&name, &value, description);
-            let encrypted = sec.to_encrypted(SECRET_KEY)?;
+            let encrypted = sec.to_encrypted(&key)?;
             if let Err(e) = encrypted.store(&db).await {
                 eprintln!("{}", e);
             }
         }
         cli::Command::Get { name } => {
             let db = db::connect().await?;
+            let input_password = read_password()?;
+            let user = authenticate_user(&db, &input_password).await?;
+            let key = user.derive_key(&input_password)?;
+
             let sec = Secret::get(&db, &name).await?;
-            let cleartext = sec.to_cleartext(SECRET_KEY)?;
+            let cleartext = sec.to_cleartext(&key)?;
 
             println!("{}", cleartext.value)
         }
@@ -100,4 +105,22 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn read_password() -> Result<String> {
+    Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Enter master password")
+        .report(false)
+        .interact_text()
+        .context("Failed to read user password")
+}
+
+async fn authenticate_user(db: &SqlitePool, password: &str) -> Result<User> {
+    let user = user::User::load(db).await?;
+
+    if user.authenticate(password) {
+        Ok(user)
+    } else {
+        bail!("Invalid master password")
+    }
 }
