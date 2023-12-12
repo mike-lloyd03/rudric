@@ -1,31 +1,35 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Sqlite};
 
 pub async fn init() -> Result<SqlitePool> {
     let db_url = db_url()?;
 
-    if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
-        println!("Creating database {}", db_url);
-        match Sqlite::create_database(&db_url).await {
-            Ok(_) => println!("Create db success"),
-            Err(error) => bail!("error: {}", error),
-        }
-    } else {
-        println!("Database already exists");
+    println!("Creating database {}", db_url);
+    match Sqlite::create_database(&db_url).await {
+        Ok(_) => println!("Create db success"),
+        Err(error) => bail!("error: {}", error),
     }
 
     connect().await
 }
 
+pub async fn exists() -> Result<bool> {
+    let db_url = db_url()?;
+
+    Ok(Sqlite::database_exists(&db_url).await?)
+}
+
 pub fn db_url() -> Result<String> {
+    Ok(format!("sqlite://{}", db_path()?))
+}
+
+pub fn db_path() -> Result<String> {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("rudric")?;
     let db_file = xdg_dirs.place_config_file("data.db")?;
-    let db_url = format!(
-        "sqlite://{}",
-        db_file.to_str().expect("db path should be utf-8")
-    );
-
-    Ok(db_url)
+    Ok(db_file
+        .to_str()
+        .context("Failed to get database filepath")?
+        .to_string())
 }
 
 pub async fn connect() -> Result<SqlitePool> {

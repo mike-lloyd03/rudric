@@ -1,13 +1,12 @@
 use sqlx::{prelude::*, SqlitePool};
 
 use anyhow::{bail, Context, Result};
-use base64::{self, engine::general_purpose, Engine};
 
 #[derive(Debug, FromRow)]
 pub struct Secret {
     pub id: Option<i64>,
     pub name: String,
-    pub value: String,
+    pub value: Vec<u8>,
     pub description: Option<String>,
 }
 #[derive(Debug)]
@@ -35,12 +34,11 @@ impl ClearTextSecret {
             .context("failed to create secret key")?;
         let encrypted_bytes = orion::aead::seal(&secret_key, self.value.as_bytes())
             .context("failed to seal input string")?;
-        let encoded: String = general_purpose::STANDARD_NO_PAD.encode(encrypted_bytes);
 
         Ok(Secret {
             id: None,
             name: self.name.clone(),
-            value: encoded,
+            value: encrypted_bytes,
             description: self.description.clone(),
         })
     }
@@ -62,7 +60,7 @@ impl Secret {
     }
 
     pub async fn store(&self, db: &SqlitePool) -> Result<()> {
-        if let Err(e) = sqlx::query!(
+        sqlx::query!(
             "insert into secrets (name, value, description) values (?, ?, ?)",
             self.name,
             self.value,
@@ -70,24 +68,18 @@ impl Secret {
         )
         .execute(db)
         .await
+        .map(|_| ())
         .context("Failed to store secret")
-        {
-            Err(e)
-        } else {
-            Ok(())
-        }
     }
 
     pub fn to_cleartext(&self, key: &str) -> Result<ClearTextSecret> {
         if key.len() < 32 {
             bail!("Key length must be 32 bytes minimum");
         }
-        println!("Got bytes: {:?}", self.value);
 
         let secret_key = orion::aead::SecretKey::from_slice(key.as_bytes())
             .context("failed to create secret key")?;
-        let decoded_value: Vec<u8> = general_purpose::STANDARD_NO_PAD.decode(&self.value)?;
-        let cleartext_value_bytes = orion::aead::open(&secret_key, &decoded_value)?;
+        let cleartext_value_bytes = orion::aead::open(&secret_key, &self.value)?;
         let cleartext_value = std::str::from_utf8(&cleartext_value_bytes)?;
 
         Ok(ClearTextSecret {
@@ -98,14 +90,10 @@ impl Secret {
     }
 
     pub async fn delete(&self, db: &SqlitePool) -> Result<()> {
-        if let Err(e) = sqlx::query!("delete from secrets where name = ?", self.name)
+        sqlx::query!("delete from secrets where name = ?", self.name)
             .execute(db)
             .await
+            .map(|_| ())
             .context("Failed to delete secret")
-        {
-            Err(e)
-        } else {
-            Ok(())
-        }
     }
 }

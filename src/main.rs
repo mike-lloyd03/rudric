@@ -1,9 +1,13 @@
 use anyhow::{bail, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input};
-use types::secret::{ClearTextSecret, Secret};
+use types::{
+    secret::{ClearTextSecret, Secret},
+    user,
+};
 
 mod cli;
+mod crypto;
 mod db;
 mod types;
 
@@ -15,7 +19,11 @@ async fn main() -> Result<()> {
 
     match cli.command {
         cli::Command::Init => {
-            // TODO: Check if db is already initialized.
+            let db_exists = db::exists().await?;
+
+            if db_exists {
+                bail!("A database already exists at {}", db::db_path()?);
+            }
 
             let master_password1: String = Input::with_theme(&ColorfulTheme::default())
                 .with_prompt("Set a master password")
@@ -47,10 +55,11 @@ async fn main() -> Result<()> {
                 bail!("Passwords do not match.")
             }
 
+            let user = user::User::new(&master_password1)?;
+
             let db = db::init().await?;
 
-            let app = types::app::App::new(&db);
-            app.set_master_password(&master_password1).await;
+            user.store(&db).await?;
         }
         cli::Command::Create {
             name,
