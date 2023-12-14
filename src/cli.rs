@@ -12,14 +12,19 @@ pub enum Command {
     Init,
     Create {
         name: String,
-        value: String,
-        #[arg(short = 'd')]
+        /// Set the secret description
+        #[arg(short = 'd', long)]
         description: Option<String>,
     },
     Get {
         name: String,
+        /// Output the secret in json format
+        #[arg(long)]
+        json: bool,
     },
-    Edit,
+    Edit {
+        name: String,
+    },
     Delete {
         name: String,
     },

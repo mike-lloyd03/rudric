@@ -15,13 +15,6 @@ pub fn hash_password(password: &str) -> Result<pwhash::PasswordHash> {
     pwhash::hash_password(&password, 3, 1 << 16).context("Failed to hash password")
 }
 
-/// Hashes the given password and returns it as a String
-pub fn hash_password_string(password: &str) -> anyhow::Result<String> {
-    let pw = pwhash::Password::from_slice(password.as_bytes())?;
-    let hash = pwhash::hash_password(&pw, 3, 1 << 16)?;
-    Ok(hash.unprotected_as_encoded().to_string())
-}
-
 /// Verifies the given password aginst the given hash string
 pub fn verify_hash(password: &str, hash: &str) -> bool {
     let hash = match pwhash::PasswordHash::from_encoded(hash) {
@@ -30,4 +23,12 @@ pub fn verify_hash(password: &str, hash: &str) -> bool {
     };
     let input_password = pwhash::Password::from_slice(password.as_bytes()).unwrap_or_default();
     hash_password_verify(&hash, &input_password).is_ok()
+}
+
+pub fn encrypt_bytes(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+    orion::aead::seal(key, bytes).context("failed to seal input value")
+}
+
+pub fn decrypt_bytes(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+    orion::aead::open(key, bytes).context("failed to open encrypted value")
 }

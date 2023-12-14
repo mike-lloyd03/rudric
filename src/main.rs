@@ -58,15 +58,12 @@ async fn main() -> Result<()> {
 
             user.store(&db).await?;
         }
-        cli::Command::Create {
-            name,
-            value,
-            description,
-        } => {
+        cli::Command::Create { name, description } => {
             let db = db::connect().await?;
-            let input_password = read_password()?;
+            let input_password = read_input("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
+            let value = read_input("Enter secret value")?;
 
             let sec = ClearTextSecret::new(&name, &value, description);
             let encrypted = sec.to_encrypted(&key)?;
@@ -74,18 +71,30 @@ async fn main() -> Result<()> {
                 eprintln!("{}", e);
             }
         }
-        cli::Command::Get { name } => {
+        cli::Command::Get { name, json } => {
             let db = db::connect().await?;
-            let input_password = read_password()?;
+            let input_password = read_input("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
 
             let sec = Secret::get(&db, &name).await?;
             let cleartext = sec.to_cleartext(&key)?;
 
-            println!("{}", cleartext.value)
+            if json {
+                println!("{}", cleartext.to_json()?)
+            } else {
+                println!("{}", cleartext.value)
+            }
         }
-        cli::Command::Edit => todo!(),
+        cli::Command::Edit { name } => {
+            let db = db::connect().await?;
+            let input_password = read_input("Enter master password")?;
+            let user = authenticate_user(&db, &input_password).await?;
+            let key = user.derive_key(&input_password)?;
+
+            let mut sec = Secret::get(&db, &name).await?;
+            sec.edit(&db, &key).await?;
+        }
         cli::Command::Delete { name } => {
             let db = db::connect().await?;
             let sec = Secret::get(&db, &name).await?;
@@ -107,12 +116,12 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_password() -> Result<String> {
+fn read_input(prompt: &str) -> Result<String> {
     Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Enter master password")
+        .with_prompt(prompt)
         .report(false)
         .interact_text()
-        .context("Failed to read user password")
+        .context("Failed to read user input")
 }
 
 async fn authenticate_user(db: &SqlitePool, password: &str) -> Result<User> {
