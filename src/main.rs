@@ -24,12 +24,12 @@ async fn main() -> Result<()> {
                 bail!("A database already exists at {}", db::db_path()?);
             }
 
-            let master_password1: String = Password::with_theme(&ColorfulTheme::default())
+            let master_password: String = Password::with_theme(&ColorfulTheme::default())
                 .with_prompt("Set a master password")
-                .with_confirmation("Confirm password", "Passwords mismatching")
+                .with_confirmation("Confirm password", "Passwords do not match")
                 .interact()?;
 
-            let user = user::User::new(&master_password1)?;
+            let user = user::User::new(&master_password)?;
 
             let db = db::init().await?;
 

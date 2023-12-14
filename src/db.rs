@@ -4,7 +4,7 @@ use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Sqlite};
 pub async fn init() -> Result<SqlitePool> {
     let db_url = db_url()?;
 
-    println!("Creating database {}", db_url);
+    println!("Creating database {}", db_path()?);
     match Sqlite::create_database(&db_url).await {
         Ok(_) => println!("Create db success"),
         Err(error) => bail!("error: {}", error),
