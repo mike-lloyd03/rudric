@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use dialoguer::{theme::ColorfulTheme, Input};
+use dialoguer::{theme::ColorfulTheme, Input, Password};
 use sqlx::SqlitePool;
 use types::{
     secret::{ClearTextSecret, Secret},
@@ -24,33 +24,10 @@ async fn main() -> Result<()> {
                 bail!("A database already exists at {}", db::db_path()?);
             }
 
-            let master_password1: String = Input::with_theme(&ColorfulTheme::default())
+            let master_password1: String = Password::with_theme(&ColorfulTheme::default())
                 .with_prompt("Set a master password")
-                .validate_with(|a: &String| -> Result<()> {
-                    if a.len() >= 8 {
-                        Ok(())
-                    } else {
-                        bail!("Password must be minimum 8 characters")
-                    }
-                })
-                .report(false)
-                .interact_text()?;
-
-            let master_password2: String = Input::with_theme(&ColorfulTheme::default())
-                .with_prompt("Re-enter")
-                .validate_with(|a: &String| -> Result<()> {
-                    if a == &master_password1 {
-                        Ok(())
-                    } else {
-                        bail!("Passwords do not match")
-                    }
-                })
-                .report(false)
-                .interact_text()?;
-
-            if master_password1 != master_password2 {
-                bail!("Passwords do not match.")
-            }
+                .with_confirmation("Confirm password", "Passwords mismatching")
+                .interact()?;
 
             let user = user::User::new(&master_password1)?;
 
@@ -60,7 +37,7 @@ async fn main() -> Result<()> {
         }
         cli::Command::Create { name, description } => {
             let db = db::connect().await?;
-            let input_password = read_input("Enter master password")?;
+            let input_password = read_password("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
             let value = read_input("Enter secret value")?;
@@ -73,7 +50,7 @@ async fn main() -> Result<()> {
         }
         cli::Command::Get { name, json } => {
             let db = db::connect().await?;
-            let input_password = read_input("Enter master password")?;
+            let input_password = read_password("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
 
@@ -88,7 +65,7 @@ async fn main() -> Result<()> {
         }
         cli::Command::Edit { name } => {
             let db = db::connect().await?;
-            let input_password = read_input("Enter master password")?;
+            let input_password = read_password("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
 
@@ -114,6 +91,14 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn read_password(prompt: &str) -> Result<String> {
+    Password::with_theme(&ColorfulTheme::default())
+        .with_prompt(prompt)
+        .report(false)
+        .interact()
+        .context("Failed to read user input")
 }
 
 fn read_input(prompt: &str) -> Result<String> {
