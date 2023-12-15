@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use dialoguer::{theme::ColorfulTheme, Input, Password};
+use dialoguer::{theme::ColorfulTheme, Password};
+use io::edit_text;
 use sqlx::SqlitePool;
 use types::{
     secret::{ClearTextSecret, Secret},
@@ -10,6 +11,7 @@ use types::{
 mod cli;
 mod crypto;
 mod db;
+mod io;
 mod types;
 
 #[tokio::main]
@@ -40,9 +42,10 @@ async fn main() -> Result<()> {
             let input_password = read_password("Enter master password")?;
             let user = authenticate_user(&db, &input_password).await?;
             let key = user.derive_key(&input_password)?;
-            let value = read_input("Enter secret value")?;
+            let value = edit_text(b"")?;
+            let value_bytes = std::str::from_utf8(&value)?;
 
-            let sec = ClearTextSecret::new(&name, &value, description);
+            let sec = ClearTextSecret::new(&name, value_bytes, description);
             let encrypted = sec.to_encrypted(&key)?;
             if let Err(e) = encrypted.store(&db).await {
                 eprintln!("{}", e);
@@ -70,7 +73,19 @@ async fn main() -> Result<()> {
             let key = user.derive_key(&input_password)?;
 
             let mut sec = Secret::get(&db, &name).await?;
-            sec.edit(&db, &key).await?;
+            let clear_text = crypto::decrypt_bytes(&key, &sec.value)?;
+
+            let new_contents = edit_text(&clear_text)?;
+
+            if new_contents == clear_text {
+                println!("Secret not changed. Aborting...")
+            } else {
+                let new_encrypted = crypto::encrypt_bytes(&key, &new_contents)?;
+                sec.value = new_encrypted;
+                sec.update(&db).await?;
+
+                println!("Updated secret {}", sec.name);
+            }
         }
         cli::Command::Delete { name } => {
             let db = db::connect().await?;
@@ -98,14 +113,6 @@ fn read_password(prompt: &str) -> Result<String> {
         .with_prompt(prompt)
         .report(false)
         .interact()
-        .context("Failed to read user input")
-}
-
-fn read_input(prompt: &str) -> Result<String> {
-    Input::with_theme(&ColorfulTheme::default())
-        .with_prompt(prompt)
-        .report(false)
-        .interact_text()
         .context("Failed to read user input")
 }
 
