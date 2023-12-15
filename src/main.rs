@@ -1,11 +1,12 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Password};
 use io::edit_text;
-use sqlx::SqlitePool;
+use orion::kex;
 use types::{
+    app::App,
     secret::{ClearTextSecret, Secret},
-    user::{self, User},
+    user,
 };
 
 mod cli;
@@ -38,27 +39,22 @@ async fn main() -> Result<()> {
             user.store(&db).await?;
         }
         cli::Command::Create { name, description } => {
-            let db = db::connect().await?;
-            let input_password = read_password("Enter master password")?;
-            let user = authenticate_user(&db, &input_password).await?;
-            let key = user.derive_key(&input_password)?;
+            let app = App::new().await?;
+
             let value = edit_text(b"")?;
             let value_bytes = std::str::from_utf8(&value)?;
 
             let sec = ClearTextSecret::new(&name, value_bytes, description);
-            let encrypted = sec.to_encrypted(&key)?;
-            if let Err(e) = encrypted.store(&db).await {
+            let encrypted = sec.to_encrypted(&app.key)?;
+            if let Err(e) = encrypted.store(&app.db).await {
                 eprintln!("{}", e);
             }
         }
         cli::Command::Get { name, json } => {
-            let db = db::connect().await?;
-            let input_password = read_password("Enter master password")?;
-            let user = authenticate_user(&db, &input_password).await?;
-            let key = user.derive_key(&input_password)?;
+            let app = App::new().await?;
 
-            let sec = Secret::get(&db, &name).await?;
-            let cleartext = sec.to_cleartext(&key)?;
+            let sec = Secret::get(&app.db, &name).await?;
+            let cleartext = sec.to_cleartext(&app.key)?;
 
             if json {
                 println!("{}", cleartext.to_json()?)
@@ -67,34 +63,33 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Edit { name } => {
-            let db = db::connect().await?;
-            let input_password = read_password("Enter master password")?;
-            let user = authenticate_user(&db, &input_password).await?;
-            let key = user.derive_key(&input_password)?;
+            let app = App::new().await?;
 
-            let mut sec = Secret::get(&db, &name).await?;
-            let clear_text = crypto::decrypt_bytes(&key, &sec.value)?;
+            let mut sec = Secret::get(&app.db, &name).await?;
+            let clear_text = crypto::decrypt_bytes(&app.key, &sec.value)?;
 
             let new_contents = edit_text(&clear_text)?;
 
             if new_contents == clear_text {
                 println!("Secret not changed. Aborting...")
             } else {
-                let new_encrypted = crypto::encrypt_bytes(&key, &new_contents)?;
+                let new_encrypted = crypto::encrypt_bytes(&app.key, &new_contents)?;
                 sec.value = new_encrypted;
-                sec.update(&db).await?;
+                sec.update(&app.db).await?;
 
                 println!("Updated secret {}", sec.name);
             }
         }
         cli::Command::Delete { name } => {
-            let db = db::connect().await?;
-            let sec = Secret::get(&db, &name).await?;
-            sec.delete(&db).await?;
+            let app = App::new().await?;
+
+            let sec = Secret::get(&app.db, &name).await?;
+            sec.delete(&app.db).await?;
         }
         cli::Command::List => {
-            let db = db::connect().await?;
-            let secrets = Secret::get_all(&db).await?;
+            let app = App::new().await?;
+
+            let secrets = Secret::get_all(&app.db).await?;
             for secret in secrets {
                 println!(
                     "{}\t\t{}",
@@ -103,25 +98,15 @@ async fn main() -> Result<()> {
                 )
             }
         }
+        cli::Command::Session => {
+            let db = db::connect().await?;
+            let input_password = App::read_password()?;
+            let user = App::authenticate_user(&db, &input_password).await?;
+            let key = kex::SecretKey::generate(256)?;
+            let encrypted_password = crypto::encrypt_bytes(&key, input_password.as_bytes())?;
+            let id = uuid::Uuid::new_v4();
+        }
     }
 
     Ok(())
-}
-
-fn read_password(prompt: &str) -> Result<String> {
-    Password::with_theme(&ColorfulTheme::default())
-        .with_prompt(prompt)
-        .report(false)
-        .interact()
-        .context("Failed to read user input")
-}
-
-async fn authenticate_user(db: &SqlitePool, password: &str) -> Result<User> {
-    let user = user::User::load(db).await?;
-
-    if user.authenticate(password) {
-        Ok(user)
-    } else {
-        bail!("Invalid master password")
-    }
 }

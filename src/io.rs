@@ -1,20 +1,20 @@
 use anyhow::{bail, Context, Result};
 use std::fs;
 
-use mktemp::Temp;
+use tempfile::NamedTempFile;
 
 pub fn edit_text(input: &[u8]) -> Result<Vec<u8>> {
-    let file = Temp::new_file()?;
+    let file = NamedTempFile::new()?;
 
-    fs::write(file.as_path(), input).expect("failed to write file");
+    fs::write(file.path(), input).expect("failed to write file");
     let editor = get_editor()?;
 
     std::process::Command::new(editor)
-        .arg(file.as_path())
+        .arg(file.path())
         .status()
         .context("Failed to edit file")?;
 
-    let new_contents = fs::read(file.as_path())?;
+    let new_contents = fs::read(file.path())?;
     Ok(new_contents)
 }
 

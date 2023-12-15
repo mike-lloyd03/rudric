@@ -29,4 +29,5 @@ pub enum Command {
         name: String,
     },
     List,
+    Session,
 }
