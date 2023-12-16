@@ -102,9 +102,21 @@ async fn main() -> Result<()> {
             let db = db::connect().await?;
             let input_password = App::read_password()?;
             let user = App::authenticate_user(&db, &input_password).await?;
-            let key = kex::SecretKey::generate(256)?;
-            let encrypted_password = crypto::encrypt_bytes(&key, input_password.as_bytes())?;
-            let id = uuid::Uuid::new_v4();
+            let derived_key = user.derive_key(&input_password)?;
+            let session_key = kex::SecretKey::generate(256)?;
+            let encrypted_derived_key =
+                crypto::encrypt_bytes(&session_key, derived_key.unprotected_as_bytes())?;
+            let id = sqlx::types::Uuid::new_v4();
+
+            sqlx::query!(
+                "insert into session_keys (id, key) values (?, ?)",
+                id,
+                encrypted_derived_key
+            )
+            .execute(&db)
+            .await?;
+
+            let session_token = [id.as_bytes(), session_key.unprotected_as_bytes()].concat();
         }
     }
 

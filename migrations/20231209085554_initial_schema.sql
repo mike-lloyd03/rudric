@@ -10,3 +10,8 @@ create table secrets (
     value blob not null,
     description text
 );
+
+create table session_keys (
+    id blob primary key,
+    key blob not null
+)
