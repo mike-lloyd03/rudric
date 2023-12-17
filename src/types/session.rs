@@ -18,20 +18,21 @@ impl SessionToken {
 
     pub async fn new(db: &SqlitePool, derived_key: SecretKey) -> Result<Self> {
         let session_key = SecretKey::default();
+        let session_key_bytes = session_key.unprotected_as_bytes();
 
         let encrypted_derived_key =
             crypto::encrypt_bytes(&session_key, derived_key.unprotected_as_bytes())?;
         let session_id = sqlx::types::Uuid::new_v4();
 
         sqlx::query!(
-            "insert into session_keys (id, key) values (?, ?)",
+            "insert into session_tokens (id, key) values (?, ?)",
             session_id,
-            encrypted_derived_key
+            session_key_bytes
         )
         .execute(db)
         .await?;
 
-        let session_token = [session_id.as_bytes(), session_key.unprotected_as_bytes()].concat();
+        let session_token = [session_id.as_bytes(), encrypted_derived_key.as_slice()].concat();
 
         Ok(Self(STANDARD_NO_PAD.encode(session_token)))
     }
@@ -42,19 +43,22 @@ impl SessionToken {
         if session_token_bytes.len() < 16 {
             bail!("Invalid session token")
         }
-        let (session_id, session_key) = session_token_bytes.split_at(16);
-        let session_key = SecretKey::from_slice(session_key)?;
+        let (session_id, encrypted_derived_key) = session_token_bytes.split_at(16);
 
-        struct Res {
+        struct Session {
             key: Vec<u8>,
         }
-        let encrypted_derived_key =
-            sqlx::query_as!(Res, "select key from session_keys where id = ?", session_id,)
-                .fetch_one(db)
-                .await?;
+        let session = sqlx::query_as!(
+            Session,
+            "select key from session_tokens where id = ?",
+            session_id,
+        )
+        .fetch_one(db)
+        .await?;
 
-        let decrypted_derived_key =
-            crypto::decrypt_bytes(&session_key, encrypted_derived_key.key.as_slice())?;
+        let session_key = SecretKey::from_slice(session.key.as_slice())?;
+
+        let decrypted_derived_key = crypto::decrypt_bytes(&session_key, encrypted_derived_key)?;
 
         SecretKey::from_slice(&decrypted_derived_key)
             .context("Failed to create SecretKey from decrypted key")

@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Password};
-use orion::kex;
+use orion::kex::{self, SecretKey};
 use sqlx::SqlitePool;
 
 use crate::db;
@@ -13,16 +13,19 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new() -> Result<Self> {
+    pub async fn new(check_session: bool) -> Result<Self> {
         let db = db::connect().await?;
-        let derived_key = match SessionToken::from_env() {
-            Ok(st) => st.into_derived_key(&db).await?,
-            Err(_) => {
-                let input_password = Self::read_password()?;
-                let user = Self::authenticate_user(&db, &input_password).await?;
-                user.derive_key(&input_password)?
+
+        if check_session {
+            if let Ok(st) = SessionToken::from_env() {
+                let derived_key = st.into_derived_key(&db).await?;
+                return Ok(Self { db, derived_key });
             }
         };
+
+        let input_password = Self::read_password()?;
+        let user = Self::authenticate_user(&db, &input_password).await?;
+        let derived_key = user.derive_key(&input_password)?;
 
         Ok(Self { db, derived_key })
     }

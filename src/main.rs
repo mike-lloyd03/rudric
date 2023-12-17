@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
             user.store(&db).await?;
         }
         cli::Command::Create { name, description } => {
-            let app = App::new().await?;
+            let app = App::new(true).await?;
 
             let value = edit_text(b"")?;
             let value_bytes = std::str::from_utf8(&value)?;
@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Get { name, json } => {
-            let app = App::new().await?;
+            let app = App::new(true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
             let cleartext = sec.to_cleartext(&app.derived_key)?;
@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Edit { name } => {
-            let app = App::new().await?;
+            let app = App::new(true).await?;
 
             let mut sec = Secret::get(&app.db, &name).await?;
             let clear_text = crypto::decrypt_bytes(&app.derived_key, &sec.value)?;
@@ -82,13 +82,13 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Delete { name } => {
-            let app = App::new().await?;
+            let app = App::new(true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
             sec.delete(&app.db).await?;
         }
         cli::Command::List => {
-            let app = App::new().await?;
+            let app = App::new(true).await?;
 
             let secrets = Secret::get_all(&app.db).await?;
             for secret in secrets {
@@ -100,11 +100,10 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Session => {
-            let app = App::new().await?;
+            let app = App::new(false).await?;
 
             let session_token = SessionToken::new(&app.db, app.derived_key).await?;
 
-            eprint!("RUDRIC_SESSION=");
             println!("{session_token}");
         }
     }

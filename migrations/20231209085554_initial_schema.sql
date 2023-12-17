@@ -11,7 +11,7 @@ create table secrets (
     description text
 );
 
-create table session_keys (
+create table session_tokens (
     id blob primary key,
     key blob not null
 )
