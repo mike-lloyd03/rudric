@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Password};
 use io::edit_text;
@@ -103,7 +104,7 @@ async fn main() -> Result<()> {
             let input_password = App::read_password()?;
             let user = App::authenticate_user(&db, &input_password).await?;
             let derived_key = user.derive_key(&input_password)?;
-            let session_key = kex::SecretKey::generate(256)?;
+            let session_key = kex::SecretKey::generate(64)?;
             let encrypted_derived_key =
                 crypto::encrypt_bytes(&session_key, derived_key.unprotected_as_bytes())?;
             let id = sqlx::types::Uuid::new_v4();
@@ -117,6 +118,19 @@ async fn main() -> Result<()> {
             .await?;
 
             let session_token = [id.as_bytes(), session_key.unprotected_as_bytes()].concat();
+
+            let encoded_session_token = STANDARD_NO_PAD.encode(session_token);
+
+            println!("session_token: {encoded_session_token}");
+
+            // --------------------
+
+            let session_token_bytes = STANDARD_NO_PAD.decode(encoded_session_token)?;
+
+            let (got_id, got_key) = session_token_bytes.split_at(16);
+
+            assert_eq!(id.as_bytes(), got_id);
+            assert_eq!(session_key.unprotected_as_bytes(), got_key);
         }
     }
 
