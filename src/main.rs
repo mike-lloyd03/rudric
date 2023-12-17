@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Password};
 use io::edit_text;
-use orion::kex;
+use orion::kex::{self, SecretKey};
 use types::{
     app::App,
     secret::{ClearTextSecret, Secret},
@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
             let input_password = App::read_password()?;
             let user = App::authenticate_user(&db, &input_password).await?;
             let derived_key = user.derive_key(&input_password)?;
-            let session_key = kex::SecretKey::generate(64)?;
+            let session_key = kex::SecretKey::default();
             let encrypted_derived_key =
                 crypto::encrypt_bytes(&session_key, derived_key.unprotected_as_bytes())?;
             let id = sqlx::types::Uuid::new_v4();
@@ -131,6 +131,26 @@ async fn main() -> Result<()> {
 
             assert_eq!(id.as_bytes(), got_id);
             assert_eq!(session_key.unprotected_as_bytes(), got_key);
+
+            struct Res {
+                key: Vec<u8>,
+            }
+            let got_encrypted_derived_key =
+                sqlx::query_as!(Res, "select key from session_keys where id = ?", id,)
+                    .fetch_one(&db)
+                    .await?;
+
+            let got_key_key = SecretKey::from_slice(got_key)?;
+            let decrypted_derived_key =
+                crypto::decrypt_bytes(&got_key_key, got_encrypted_derived_key.key.as_slice())?;
+
+            assert_eq!(derived_key.unprotected_as_bytes(), decrypted_derived_key);
+
+            let secret = Secret::get(&db, "sec4").await?;
+            let decrypted_derived_key_key = SecretKey::from_slice(&decrypted_derived_key)?;
+            let cleartext = secret.to_cleartext(&decrypted_derived_key_key)?;
+
+            println!("Secret value: {}", cleartext.value);
         }
     }
 

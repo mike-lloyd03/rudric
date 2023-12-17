@@ -14,7 +14,7 @@ pub struct User {
 impl User {
     pub fn new(cleartext_password: &str) -> Result<Self> {
         let pwhash = crypto::hash_password(cleartext_password)?;
-        let salt = orion::kdf::Salt::default();
+        let salt = crypto::generate_salt()?;
 
         Ok(Self {
             id: 1,
