@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Password};
-use orion::kex::{self, SecretKey};
+use orion::kex;
 use sqlx::SqlitePool;
 
 use crate::db;

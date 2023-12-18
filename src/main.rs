@@ -5,6 +5,10 @@ use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Password};
 use io::edit_text;
 
+use tabled::{
+    settings::{object::Segment, Alignment, Modify, Style},
+    Table, Tabled,
+};
 use types::{
     app::App,
     renv::Renv,
@@ -93,14 +97,26 @@ async fn main() -> Result<()> {
         cli::Command::List => {
             let app = App::new(true).await?;
 
-            let secrets = Secret::get_all(&app.db).await?;
-            for secret in secrets {
-                println!(
-                    "{}\t\t{}",
-                    secret.name,
-                    secret.description.unwrap_or_default()
-                )
+            #[derive(Tabled)]
+            struct SecretsTable {
+                id: i64,
+                name: String,
+                description: String,
             }
+
+            let secrets = Secret::get_all(&app.db).await?;
+            let secrets_table = secrets.iter().map(|s| SecretsTable {
+                id: s.id.unwrap_or_default(),
+                name: s.name.clone(),
+                description: s.description.clone().unwrap_or_default(),
+            });
+
+            let table = Table::new(secrets_table)
+                .with(Style::rounded())
+                .with(Modify::new(Segment::all()).with(Alignment::left()))
+                .to_string();
+
+            println!("{table}");
         }
         cli::Command::Session => {
             let app = App::new(false).await?;

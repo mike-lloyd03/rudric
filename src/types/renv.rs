@@ -74,13 +74,6 @@ async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
 impl Renv {
     // Loads the given `path` and parses it's contents for variable names and secret names. Secret
     // names will be replaced with their secret values.
-    //
-    // For now, this will only accept variable definitions in the form:
-    // VARIABLE_NAME={{secret_name}}
-    //
-    // In the future, this should accept defintions like:
-    // VARIABLE_NAME=non-secret text
-    // VARIABLE_NAME=prefix_{{secret_name}}
     pub async fn load(app: &App, path: &Path) -> Result<Self> {
         let contents = fs::read_to_string(path)?;
         let lines: Vec<String> = contents.lines().map(|l| l.trim().to_string()).collect();
@@ -121,6 +114,7 @@ impl Renv {
                     format! {"$env.{} = '{}'\n", v.name, v.value}
                 }
             };
+
             output += &line;
         }
 
