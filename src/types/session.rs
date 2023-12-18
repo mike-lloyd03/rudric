@@ -11,9 +11,7 @@ pub struct SessionToken(String);
 
 impl SessionToken {
     pub fn from_env() -> Result<Self> {
-        let session_token = env::var("RUDRIC_SESSION")?;
-
-        Ok(Self(session_token))
+        Ok(Self(env::var("RUDRIC_SESSION")?))
     }
 
     pub async fn new(db: &SqlitePool, derived_key: SecretKey) -> Result<Self> {
