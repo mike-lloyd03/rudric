@@ -30,4 +30,7 @@ pub enum Command {
     },
     List,
     Session,
+    Env {
+        shell: Option<String>,
+    },
 }

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::{bail, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Password};
@@ -5,6 +7,7 @@ use io::edit_text;
 
 use types::{
     app::App,
+    renv::Renv,
     secret::{ClearTextSecret, Secret},
     session::SessionToken,
     user,
@@ -105,6 +108,15 @@ async fn main() -> Result<()> {
             let session_token = SessionToken::new(&app.db, app.derived_key).await?;
 
             println!("{session_token}");
+        }
+        cli::Command::Env { shell } => {
+            let app = App::new(true).await?;
+
+            let path = Path::new(".renv");
+
+            let renv = Renv::load(&app, path).await?;
+
+            println!("{renv:?}")
         }
     }
 
