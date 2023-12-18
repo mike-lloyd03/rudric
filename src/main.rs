@@ -116,7 +116,9 @@ async fn main() -> Result<()> {
 
             let renv = Renv::load(&app, path).await?;
 
-            println!("{renv:?}")
+            let shell = shell.unwrap_or_default();
+
+            println!("{}", renv.to_shell(shell))
         }
     }
 

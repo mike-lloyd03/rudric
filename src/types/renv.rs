@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use anyhow::{bail, Result};
+use clap::ValueEnum;
 use regex::Regex;
 
 use crate::types::secret::Secret;
@@ -12,8 +13,13 @@ pub struct Renv {
     pub variables: Vec<Variable>,
 }
 
-pub enum OutputShell {
+#[derive(Clone, Default, ValueEnum)]
+pub enum ShellType {
+    #[default]
     Fish,
+    Bash,
+    Zsh,
+    Nu,
 }
 
 #[derive(Debug)]
@@ -47,7 +53,17 @@ async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
     let re = Regex::new(r"\{\{(\w+)\}\}")?;
     for m in re.find_iter(s) {
         let secret_name = m.as_str().trim_start_matches('{').trim_end_matches('}');
-        let secret = Secret::get(&app.db, secret_name).await?;
+        let secret = match Secret::get(&app.db, secret_name).await {
+            Ok(s) => s,
+            Err(e) => {
+                if e.to_string().contains("Secret does not exist") {
+                    eprintln!("Secret '{secret_name}' not found");
+                    bail!(e)
+                } else {
+                    bail!(e)
+                }
+            }
+        };
         let clear_text = secret.to_cleartext(&app.derived_key)?;
         new_s = new_s.replace(m.as_str(), clear_text.value.trim());
     }
@@ -74,7 +90,10 @@ impl Renv {
         for (i, line) in lines.iter().enumerate() {
             let var = match Variable::from_string(line) {
                 Ok(mut v) => {
-                    v.value = replace_template_vars(app, &v.value).await?;
+                    v.value = match replace_template_vars(app, &v.value).await {
+                        Ok(s) => s,
+                        Err(_) => continue,
+                    };
                     v
                 }
                 Err(e) => {
@@ -86,5 +105,25 @@ impl Renv {
         }
 
         Ok(Self { variables })
+    }
+
+    pub fn to_shell(&self, shell_type: ShellType) -> String {
+        let mut output = String::new();
+        for v in &self.variables {
+            let line = match shell_type {
+                ShellType::Fish => {
+                    format! {"set -x {} {}\n", v.name, v.value}
+                }
+                ShellType::Bash | ShellType::Zsh => {
+                    format! {"export {}={}\n", v.name, v.value}
+                }
+                ShellType::Nu => {
+                    format! {"$env.{} = '{}'\n", v.name, v.value}
+                }
+            };
+            output += &line;
+        }
+
+        output
     }
 }

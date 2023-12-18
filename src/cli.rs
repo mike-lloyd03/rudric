@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 
+use crate::types::renv::ShellType;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
@@ -31,6 +33,6 @@ pub enum Command {
     List,
     Session,
     Env {
-        shell: Option<String>,
+        shell: Option<ShellType>,
     },
 }

@@ -3,7 +3,7 @@ use orion::kex;
 use serde::Serialize;
 use sqlx::{prelude::*, SqlitePool};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use crate::crypto;
 
@@ -53,7 +53,13 @@ impl Secret {
         sqlx::query_as!(Self, "select * from secrets where name = ?", name)
             .fetch_one(db)
             .await
-            .context("Failed to fetch secret from database")
+            .map_err(|e| {
+                if e.to_string().contains("no rows returned") {
+                    anyhow!("Secret does not exist")
+                } else {
+                    anyhow!(e)
+                }
+            })
     }
 
     pub async fn get_all(db: &SqlitePool) -> Result<Vec<Self>> {
