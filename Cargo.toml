@@ -22,4 +22,5 @@ uuid = { version = "1.6.1", features = ["v4"] }
 tempfile = "3.8.1"
 base64 = "0.21.5"
 regex = "1.10.2"
-tabled = "0.14.0"
+tabled = { version = "0.14.0", features = ["color"] }
+time = "0.3.30"

@@ -6,7 +6,7 @@ use dialoguer::{theme::ColorfulTheme, Password};
 use io::edit_text;
 
 use tabled::{
-    settings::{object::Segment, Alignment, Modify, Style},
+    settings::{object::Segment, style::BorderColor, Alignment, Color, Modify, Style},
     Table, Tabled,
 };
 use types::{
@@ -113,6 +113,7 @@ async fn main() -> Result<()> {
 
             let table = Table::new(secrets_table)
                 .with(Style::rounded())
+                .with(BorderColor::filled(Color::FG_BLUE))
                 .with(Modify::new(Segment::all()).with(Alignment::left()))
                 .to_string();
 
@@ -129,9 +130,7 @@ async fn main() -> Result<()> {
             let app = App::new(true).await?;
 
             let path = Path::new(".renv");
-
             let renv = Renv::load(&app, path).await?;
-
             let shell = shell.unwrap_or_default();
 
             println!("{}", renv.to_shell(shell))

@@ -30,8 +30,9 @@ pub struct Variable {
 
 impl Variable {
     pub fn from_string(s: &str) -> Result<Self> {
-        let re_var = Regex::new(r"^(?P<var_name>[\w]+)=(?P<var_value>[^=]*)$")?;
-        if let Some(captures) = re_var.captures(s) {
+        let re = Regex::new(r"^(?P<var_name>[\w]+)=(?P<var_value>[^=]*)$")?;
+
+        if let Some(captures) = re.captures(s) {
             if let Some(var_name) = captures.name("var_name") {
                 if let Some(var_value) = captures.name("var_value") {
                     return Ok(Variable {
@@ -56,7 +57,7 @@ async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
         let secret = match Secret::get(&app.db, secret_name).await {
             Ok(s) => s,
             Err(e) => {
-                if e.to_string().contains("Secret does not exist") {
+                if e.to_string().contains("Secret not found") {
                     eprintln!("Secret '{secret_name}' not found");
                     bail!(e)
                 } else {

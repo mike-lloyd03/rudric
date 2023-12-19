@@ -13,5 +13,6 @@ create table secrets (
 
 create table session_tokens (
     id blob primary key,
-    key blob not null
+    key blob not null,
+    expire_time unixepoch not null
 )

@@ -55,7 +55,7 @@ impl Secret {
             .await
             .map_err(|e| {
                 if e.to_string().contains("no rows returned") {
-                    anyhow!("Secret does not exist")
+                    anyhow!("Secret not found")
                 } else {
                     anyhow!(e)
                 }
