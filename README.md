@@ -2,6 +2,10 @@
 
 A simple secrets vault.
 
+<p align="center">
+<img src=https://github.com/mike-lloyd03/rudric/assets/49411532/3916d3f4-4ba8-43cc-b83a-2eb9bd42e33f />
+</p>
+
 Rudric makes managing secrets from the command line simple and straight-forward. Secrets are stored encrypted on disk and can be quickly decrypted and added to the environment where needed. Cleartext secrets are only ever stored in memory.
 
 # Purpose
