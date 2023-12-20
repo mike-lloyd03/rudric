@@ -44,7 +44,7 @@ impl User {
         crypto::verify_hash(password, &self.master_password_hash)
     }
 
-    pub fn derive_key(&self, password: &str) -> Result<kex::SecretKey> {
+    pub fn master_key(&self, password: &str) -> Result<kex::SecretKey> {
         if !crypto::verify_hash(password, &self.master_password_hash) {
             bail!("Invalid master password")
         }

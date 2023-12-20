@@ -9,7 +9,7 @@ use super::{session::SessionToken, user::User};
 
 pub struct App {
     pub db: SqlitePool,
-    pub derived_key: kex::SecretKey,
+    pub master_key: kex::SecretKey,
 }
 
 impl App {
@@ -18,16 +18,16 @@ impl App {
 
         if check_session {
             if let Ok(st) = SessionToken::from_env() {
-                let derived_key = st.into_derived_key(&db).await?;
-                return Ok(Self { db, derived_key });
+                let master_key = st.into_master_key(&db).await?;
+                return Ok(Self { db, master_key });
             }
         };
 
         let input_password = Self::read_password()?;
         let user = Self::authenticate_user(&db, &input_password).await?;
-        let derived_key = user.derive_key(&input_password)?;
+        let master_key = user.master_key(&input_password)?;
 
-        Ok(Self { db, derived_key })
+        Ok(Self { db, master_key })
     }
 
     pub fn read_password() -> Result<String> {

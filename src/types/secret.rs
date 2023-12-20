@@ -33,7 +33,7 @@ impl ClearTextSecret {
     }
 
     pub fn to_encrypted(&self, key: &kex::SecretKey) -> Result<Secret> {
-        let encrypted_bytes = crypto::encrypt_bytes(key, self.value.as_bytes())?;
+        let encrypted_bytes = crypto::encrypt(key, self.value.as_bytes())?;
 
         Ok(Secret {
             id: None,
@@ -99,7 +99,7 @@ impl Secret {
     }
 
     pub fn to_cleartext(&self, key: &kex::SecretKey) -> Result<ClearTextSecret> {
-        let cleartext_value_bytes = crypto::decrypt_bytes(key, &self.value)?;
+        let cleartext_value_bytes = crypto::decrypt(key, &self.value)?;
         let cleartext_value = std::str::from_utf8(&cleartext_value_bytes)?;
 
         Ok(ClearTextSecret {

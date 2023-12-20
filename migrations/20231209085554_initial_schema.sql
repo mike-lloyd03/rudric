@@ -11,8 +11,8 @@ create table secrets (
     description text
 );
 
-create table session_tokens (
-    id blob primary key,
+create table session_keys (
+    id blob primary key not null,
     key blob not null,
-    expire_time unixepoch not null
+    expire_time datetime not null
 )

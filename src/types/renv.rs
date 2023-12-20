@@ -65,7 +65,7 @@ async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
                 }
             }
         };
-        let clear_text = secret.to_cleartext(&app.derived_key)?;
+        let clear_text = secret.to_cleartext(&app.master_key)?;
         new_s = new_s.replace(m.as_str(), clear_text.value.trim());
     }
 

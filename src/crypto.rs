@@ -30,10 +30,10 @@ pub fn verify_hash(password: &str, hash: &str) -> bool {
     hash_password_verify(&hash, &input_password).is_ok()
 }
 
-pub fn encrypt_bytes(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+pub fn encrypt(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
     orion::aead::seal(key, bytes).context("Failed to seal input value")
 }
 
-pub fn decrypt_bytes(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+pub fn decrypt(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
     orion::aead::open(key, bytes).context("Failed to open encrypted value")
 }

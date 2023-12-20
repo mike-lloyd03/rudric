@@ -53,16 +53,17 @@ async fn main() -> Result<()> {
             let value_bytes = std::str::from_utf8(&value)?;
 
             let sec = ClearTextSecret::new(&name, value_bytes, description);
-            let encrypted = sec.to_encrypted(&app.derived_key)?;
+            let encrypted = sec.to_encrypted(&app.master_key)?;
             if let Err(e) = encrypted.store(&app.db).await {
                 eprintln!("{}", e);
             }
+            println!("Created secret {name}")
         }
         cli::Command::Get { name, json } => {
             let app = App::new(true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
-            let cleartext = sec.to_cleartext(&app.derived_key)?;
+            let cleartext = sec.to_cleartext(&app.master_key)?;
 
             if json {
                 println!("{}", cleartext.to_json()?)
@@ -74,14 +75,14 @@ async fn main() -> Result<()> {
             let app = App::new(true).await?;
 
             let mut sec = Secret::get(&app.db, &name).await?;
-            let clear_text = crypto::decrypt_bytes(&app.derived_key, &sec.value)?;
+            let clear_text = crypto::decrypt(&app.master_key, &sec.value)?;
 
             let new_contents = edit_text(&clear_text)?;
 
             if new_contents == clear_text {
                 println!("Secret not changed. Aborting...")
             } else {
-                let new_encrypted = crypto::encrypt_bytes(&app.derived_key, &new_contents)?;
+                let new_encrypted = crypto::encrypt(&app.master_key, &new_contents)?;
                 sec.value = new_encrypted;
                 sec.update(&app.db).await?;
 
@@ -122,7 +123,7 @@ async fn main() -> Result<()> {
         cli::Command::Session => {
             let app = App::new(false).await?;
 
-            let session_token = SessionToken::new(&app.db, app.derived_key).await?;
+            let session_token = SessionToken::new(&app.db, app.master_key).await?;
 
             println!("{session_token}");
         }
