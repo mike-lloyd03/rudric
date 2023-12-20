@@ -16,7 +16,7 @@ I use `.env` files a lot to store sensitive data like API keys and personal acce
 GITHUB_TOKEN={{personal_github_token}}
 ```
 
-This would create an environment variable called `GITHUB_TOKEN` which is set to the value of a secret in your vault called `personal_github_token`. Using `rudric env`, these variables can be set in your environment.
+This would create an environment variable called `GITHUB_TOKEN` which is set to the value of a secret in your vault called `personal_github_token`. Using `rudric env <shell_name>`, these variables can be set in your environment.
 
 ```bash
 rudric env fish | source
