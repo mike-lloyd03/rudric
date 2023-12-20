@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use orion::kex;
+use orion::aead;
 use sqlx::{prelude::FromRow, SqlitePool};
 
 use crate::crypto;
@@ -44,7 +44,7 @@ impl User {
         crypto::verify_hash(password, &self.master_password_hash)
     }
 
-    pub fn master_key(&self, password: &str) -> Result<kex::SecretKey> {
+    pub fn master_key(&self, password: &str) -> Result<aead::SecretKey> {
         if !crypto::verify_hash(password, &self.master_password_hash) {
             bail!("Invalid master password")
         }

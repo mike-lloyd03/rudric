@@ -2,7 +2,7 @@ use std::{env, fmt::Display};
 
 use anyhow::{bail, Context, Result};
 use base64::{engine::general_purpose::STANDARD_NO_PAD as b64, Engine};
-use orion::kex::SecretKey;
+use orion::aead::SecretKey;
 use sqlx::{sqlite::SqliteRow, FromRow, Row, SqlitePool};
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;

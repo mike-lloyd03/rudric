@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use orion::{
+    aead,
     kdf::{self, Salt},
-    kex,
     pwhash::{self, hash_password_verify},
 };
 
-pub fn derive_key(password: &str, salt: &[u8]) -> Result<kex::SecretKey> {
+pub fn derive_key(password: &str, salt: &[u8]) -> Result<aead::SecretKey> {
     let password = kdf::Password::from_slice(password.as_bytes())?;
     let salt = kdf::Salt::from_slice(salt)?;
     kdf::derive_key(&password, &salt, 3, 1 << 16, 32).context("Failed to derive key")
@@ -30,10 +30,10 @@ pub fn verify_hash(password: &str, hash: &str) -> bool {
     hash_password_verify(&hash, &input_password).is_ok()
 }
 
-pub fn encrypt(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+pub fn encrypt(key: &aead::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
     orion::aead::seal(key, bytes).context("Failed to seal input value")
 }
 
-pub fn decrypt(key: &kex::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
+pub fn decrypt(key: &aead::SecretKey, bytes: &[u8]) -> Result<Vec<u8>> {
     orion::aead::open(key, bytes).context("Failed to open encrypted value")
 }

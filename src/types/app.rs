@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Password};
-use orion::kex;
+use orion::aead;
 use sqlx::SqlitePool;
 
 use crate::db;
@@ -9,7 +9,7 @@ use super::{session::SessionToken, user::User};
 
 pub struct App {
     pub db: SqlitePool,
-    pub master_key: kex::SecretKey,
+    pub master_key: aead::SecretKey,
 }
 
 impl App {

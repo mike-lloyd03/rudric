@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{bail, Result};
 use clap::Parser;
-use dialoguer::{theme::ColorfulTheme, Password};
+use dialoguer::{theme::ColorfulTheme, Confirm, Password};
 use io::edit_text;
 
 use tabled::{
@@ -93,7 +93,17 @@ async fn main() -> Result<()> {
             let app = App::new(true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
-            sec.delete(&app.db).await?;
+
+            let prompt = format!("Delete secret {}", sec.name);
+            let confirm = Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt(prompt)
+                .wait_for_newline(true)
+                .default(false)
+                .interact()?;
+
+            if confirm {
+                sec.delete(&app.db).await?;
+            }
         }
         cli::Command::List => {
             let app = App::new(true).await?;

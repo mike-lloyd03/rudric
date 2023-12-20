@@ -1,5 +1,5 @@
 use colored_json::to_colored_json_auto;
-use orion::kex;
+use orion::aead;
 use serde::Serialize;
 use sqlx::{prelude::*, SqlitePool};
 
@@ -32,7 +32,7 @@ impl ClearTextSecret {
         }
     }
 
-    pub fn to_encrypted(&self, key: &kex::SecretKey) -> Result<Secret> {
+    pub fn to_encrypted(&self, key: &aead::SecretKey) -> Result<Secret> {
         let encrypted_bytes = crypto::encrypt(key, self.value.as_bytes())?;
 
         Ok(Secret {
@@ -98,7 +98,7 @@ impl Secret {
         .context("Failed to update secret")
     }
 
-    pub fn to_cleartext(&self, key: &kex::SecretKey) -> Result<ClearTextSecret> {
+    pub fn to_cleartext(&self, key: &aead::SecretKey) -> Result<ClearTextSecret> {
         let cleartext_value_bytes = crypto::decrypt(key, &self.value)?;
         let cleartext_value = std::str::from_utf8(&cleartext_value_bytes)?;
 
