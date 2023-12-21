@@ -4,8 +4,11 @@ use std::fs;
 use tempfile::NamedTempFile;
 
 /// Opens the provided text in the user's preferred editor
-pub fn edit_text(input: &[u8]) -> Result<Vec<u8>> {
-    let file = NamedTempFile::new()?;
+pub fn edit_text(input: &[u8], filename_prefix: Option<&str>) -> Result<Vec<u8>> {
+    let file = match filename_prefix {
+        Some(prefix) => NamedTempFile::with_prefix(format!("{prefix}-")),
+        None => NamedTempFile::new(),
+    }?;
 
     fs::write(file.path(), input).expect("failed to write file");
     let editor = get_editor()?;

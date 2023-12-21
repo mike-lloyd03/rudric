@@ -43,6 +43,9 @@ pub enum Command {
     Env {
         shell: Option<ShellType>,
     },
+    GenerateCompletions {
+        shell: ShellType,
+    },
 }
 
 #[derive(Args)]

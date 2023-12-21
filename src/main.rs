@@ -1,8 +1,9 @@
-use std::path::Path;
+use std::{io::stdout, path::Path};
 
 use anyhow::{bail, Result};
-use clap::Parser;
-use cli::Session;
+use clap::{CommandFactory, Parser};
+use clap_complete::{generate, shells};
+use cli::{Cli, Session};
 use io::edit_text;
 
 use tabled::{
@@ -11,7 +12,7 @@ use tabled::{
 };
 use types::{
     app::App,
-    renv::Renv,
+    renv::{Renv, ShellType},
     secret::{ClearTextSecret, Secret},
     session::{SessionKey, SessionToken},
     user,
@@ -47,14 +48,17 @@ async fn main() -> Result<()> {
         cli::Command::Create { name, description } => {
             let app = App::new(true).await?;
 
-            let value = edit_text(b"")?;
-            let value_bytes = std::str::from_utf8(&value)?;
+            let value = edit_text(b"", Some(&name))?;
+            let value = std::str::from_utf8(&value)?;
 
-            let sec = ClearTextSecret::new(&name, value_bytes, description);
-            let encrypted = sec.to_encrypted(&app.master_key)?;
-            if let Err(e) = encrypted.store(&app.db).await {
-                eprintln!("{}", e);
+            if value.is_empty() {
+                bail!("Canceled")
             }
+
+            let sec = ClearTextSecret::new(&name, value, description);
+            let encrypted = sec.to_encrypted(&app.master_key)?;
+            encrypted.store(&app.db).await?;
+
             println!("Created secret {name}")
         }
         cli::Command::Get { name, json } => {
@@ -76,7 +80,7 @@ async fn main() -> Result<()> {
 
             if description {
                 let old_desc = sec.description.unwrap_or_default();
-                let new_desc = edit_text(old_desc.as_bytes())?;
+                let new_desc = edit_text(old_desc.as_bytes(), Some(&sec.name))?;
 
                 if new_desc != old_desc.as_bytes() {
                     if new_desc.is_empty() {
@@ -95,7 +99,7 @@ async fn main() -> Result<()> {
             } else {
                 let clear_text = crypto::decrypt(&app.master_key, &sec.value)?;
 
-                let new_contents = edit_text(&clear_text)?;
+                let new_contents = edit_text(&clear_text, Some(&sec.name))?;
 
                 if new_contents == clear_text {
                     println!("Secret not changed. Canceling...")
@@ -194,6 +198,16 @@ async fn main() -> Result<()> {
             let shell = shell.unwrap_or_default();
 
             println!("{}", renv.to_shell(shell))
+        }
+        cli::Command::GenerateCompletions { shell } => {
+            let mut cmd = Cli::command();
+            let bin_name = "rudric";
+            match shell {
+                ShellType::Bash => generate(shells::Bash, &mut cmd, bin_name, &mut stdout()),
+                ShellType::Fish => generate(shells::Fish, &mut cmd, bin_name, &mut stdout()),
+                ShellType::Zsh => generate(shells::Zsh, &mut cmd, bin_name, &mut stdout()),
+                _ => bail!("Provided shell is not supported"),
+            };
         }
     }
 
