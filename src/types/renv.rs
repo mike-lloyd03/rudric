@@ -51,9 +51,9 @@ impl Variable {
 
 async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
     let mut new_s = s.to_string();
-    let re = Regex::new(r"\{\{(\w+)\}\}")?;
+    let re = Regex::new(r"\{\{([^}]+)}}")?;
     for m in re.find_iter(s) {
-        let secret_name = m.as_str().trim_start_matches('{').trim_end_matches('}');
+        let secret_name = m.as_str().trim_start_matches("{{").trim_end_matches("}}");
         let secret = match Secret::get(&app.db, secret_name).await {
             Ok(s) => s,
             Err(e) => {
@@ -82,11 +82,18 @@ impl Renv {
         let mut variables = vec![];
 
         for (i, line) in lines.iter().enumerate() {
+            // Skip commented and empty lines
+            if line.trim_start().starts_with('#') || line.trim().is_empty() {
+                continue;
+            }
+
             let var = match Variable::from_string(line) {
                 Ok(mut v) => {
                     v.value = match replace_template_vars(app, &v.value).await {
                         Ok(s) => s,
-                        Err(_) => continue,
+                        Err(_) => {
+                            continue;
+                        }
                     };
                     v
                 }
