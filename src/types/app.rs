@@ -1,5 +1,4 @@
-use anyhow::{bail, Context, Result};
-use dialoguer::{theme::ColorfulTheme, Password};
+use anyhow::{bail, Result};
 use orion::aead;
 use sqlx::SqlitePool;
 

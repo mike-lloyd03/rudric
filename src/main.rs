@@ -92,11 +92,14 @@ async fn main() -> Result<()> {
 
             let sec = Secret::get(&app.db, &name).await?;
 
-            let prompt_msg = format!("Delete secret {}", sec.name);
+            let prompt_msg = format!("Delete secret '{}'?", sec.name);
             let confirm = prompt::confirm(&prompt_msg, false)?;
 
             if confirm {
                 sec.delete(&app.db).await?;
+                println!("Done");
+            } else {
+                println!("Canceled");
             }
         }
         cli::Command::Rename { name, mut new_name } => {
@@ -109,15 +112,16 @@ async fn main() -> Result<()> {
             }
 
             let prompt_msg = format!(
-                "Rename secret '{}' to '{}'",
+                "Rename secret '{}' to '{}'?",
                 sec.name,
                 new_name.clone().unwrap()
             );
             if prompt::confirm(&prompt_msg, true)? {
                 sec.rename(&app.db, &new_name.unwrap()).await?;
+                println!("Done");
+            } else {
+                println!("Canceled");
             }
-
-            println!("Done");
         }
         cli::Command::List => {
             let app = App::new(true).await?;
