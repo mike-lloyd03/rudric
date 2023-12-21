@@ -6,7 +6,7 @@ use cli::Session;
 use io::edit_text;
 
 use tabled::{
-    settings::{object::Segment, style::BorderColor, Alignment, Color, Modify, Style},
+    settings::{style::BorderColor, Color, Style},
     Table, Tabled,
 };
 use types::{
