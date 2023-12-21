@@ -3,6 +3,7 @@ use std::fs;
 
 use tempfile::NamedTempFile;
 
+/// Opens the provided text in the user's preferred editor
 pub fn edit_text(input: &[u8]) -> Result<Vec<u8>> {
     let file = NamedTempFile::new()?;
 

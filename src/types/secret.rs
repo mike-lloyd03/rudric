@@ -92,9 +92,7 @@ impl Secret {
         )
         .execute(db)
         .await
-        .map(|r| {
-            println!("{:?}", r);
-        })
+        .map(|_| ())
         .context("Failed to update secret")
     }
 

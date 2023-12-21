@@ -69,22 +69,43 @@ async fn main() -> Result<()> {
                 println!("{}", cleartext.value)
             }
         }
-        cli::Command::Edit { name } => {
+        cli::Command::Edit { name, description } => {
             let app = App::new(true).await?;
 
             let mut sec = Secret::get(&app.db, &name).await?;
-            let clear_text = crypto::decrypt(&app.master_key, &sec.value)?;
 
-            let new_contents = edit_text(&clear_text)?;
+            if description {
+                let old_desc = sec.description.unwrap_or_default();
+                let new_desc = edit_text(old_desc.as_bytes())?;
 
-            if new_contents == clear_text {
-                println!("Secret not changed. Aborting...")
+                if new_desc != old_desc.as_bytes() {
+                    if new_desc.is_empty() {
+                        sec.description = None;
+                    } else {
+                        let new_desc = String::from_utf8(new_desc)?;
+                        sec.description = Some(new_desc);
+                    }
+                    sec.update(&app.db).await?;
+                    println!("Updated description for secret '{}'", sec.name);
+
+                    return Ok(());
+                } else {
+                    println!("Secret not changed. Canceling...")
+                }
             } else {
-                let new_encrypted = crypto::encrypt(&app.master_key, &new_contents)?;
-                sec.value = new_encrypted;
-                sec.update(&app.db).await?;
+                let clear_text = crypto::decrypt(&app.master_key, &sec.value)?;
 
-                println!("Updated secret '{}'", sec.name);
+                let new_contents = edit_text(&clear_text)?;
+
+                if new_contents == clear_text {
+                    println!("Secret not changed. Canceling...")
+                } else {
+                    let new_encrypted = crypto::encrypt(&app.master_key, &new_contents)?;
+                    sec.value = new_encrypted;
+                    sec.update(&app.db).await?;
+
+                    println!("Updated secret '{}'", sec.name);
+                }
             }
         }
         cli::Command::Delete { name } => {
@@ -137,13 +158,12 @@ async fn main() -> Result<()> {
             let secrets_table = secrets.iter().map(|s| SecretsTable {
                 id: s.id.unwrap_or_default(),
                 name: s.name.clone(),
-                description: s.description.clone().unwrap_or_default(),
+                description: s.description.clone().unwrap_or_default().trim().to_string(),
             });
 
             let table = Table::new(secrets_table)
                 .with(Style::rounded())
                 .with(BorderColor::filled(Color::FG_BLUE))
-                .with(Modify::new(Segment::all()).with(Alignment::left()))
                 .to_string();
 
             println!("{table}");

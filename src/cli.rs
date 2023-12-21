@@ -27,6 +27,9 @@ pub enum Command {
     },
     Edit {
         name: String,
+        /// Edit the secret description
+        #[arg(short = 'd', long)]
+        description: bool,
     },
     Delete {
         name: String,
