@@ -7,6 +7,8 @@ use anyhow::{anyhow, Context, Result};
 
 use crate::crypto;
 
+pub const SECRET_NOT_FOUND: &str = "Secret not found";
+
 #[derive(Debug, FromRow)]
 pub struct Secret {
     pub id: Option<i64>,
@@ -55,7 +57,7 @@ impl Secret {
             .await
             .map_err(|e| {
                 if e.to_string().contains("no rows returned") {
-                    anyhow!("Secret not found")
+                    anyhow!(SECRET_NOT_FOUND)
                 } else {
                     anyhow!(e)
                 }

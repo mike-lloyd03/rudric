@@ -1,12 +1,12 @@
 use std::{fs, path::Path};
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use clap::ValueEnum;
 use regex::Regex;
 
 use crate::types::secret::Secret;
 
-use super::app::App;
+use super::{app::App, secret::SECRET_NOT_FOUND};
 
 #[derive(Debug)]
 pub struct Renv {
@@ -52,21 +52,27 @@ impl Variable {
 async fn replace_template_vars(app: &App, s: &str) -> Result<String> {
     let mut new_s = s.to_string();
     let re = Regex::new(r"\{\{([^}]+)}}")?;
-    for m in re.find_iter(s) {
-        let secret_name = m.as_str().trim_start_matches("{{").trim_end_matches("}}");
+
+    for capture in re.captures_iter(s) {
+        let match_str = capture.get(0).unwrap();
+
+        let secret_name = capture
+            .get(1)
+            .ok_or(anyhow!("Failed to get regex match"))?
+            .as_str();
+
         let secret = match Secret::get(&app.db, secret_name).await {
             Ok(s) => s,
             Err(e) => {
-                if e.to_string().contains("Secret not found") {
-                    eprintln!("Secret '{secret_name}' not found");
-                    bail!(e)
+                if e.to_string().contains(SECRET_NOT_FOUND) {
+                    bail!("Secret '{secret_name}' not found")
                 } else {
                     bail!(e)
                 }
             }
         };
         let clear_text = secret.to_cleartext(&app.master_key)?;
-        new_s = new_s.replace(m.as_str(), clear_text.value.trim());
+        new_s = new_s.replace(match_str.as_str(), clear_text.value.trim());
     }
 
     Ok(new_s.to_string())
@@ -91,7 +97,8 @@ impl Renv {
                 Ok(mut v) => {
                     v.value = match replace_template_vars(app, &v.value).await {
                         Ok(s) => s,
-                        Err(_) => {
+                        Err(e) => {
+                            eprintln!("{e}");
                             continue;
                         }
                     };
