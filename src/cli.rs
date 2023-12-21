@@ -31,6 +31,10 @@ pub enum Command {
     Delete {
         name: String,
     },
+    Rename {
+        name: String,
+        new_name: Option<String>,
+    },
     List,
     Session(SessionArgs),
     Env {

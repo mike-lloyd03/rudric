@@ -3,7 +3,7 @@ use dialoguer::{theme::ColorfulTheme, Password};
 use orion::aead;
 use sqlx::SqlitePool;
 
-use crate::db;
+use crate::{db, prompt};
 
 use super::{session::SessionToken, user::User};
 
@@ -27,19 +27,11 @@ impl App {
             }
         };
 
-        let input_password = Self::read_password()?;
+        let input_password = prompt::read_password()?;
         let user = Self::authenticate_user(&db, &input_password).await?;
         let master_key = user.master_key(&input_password)?;
 
         Ok(Self { db, master_key })
-    }
-
-    pub fn read_password() -> Result<String> {
-        Password::with_theme(&ColorfulTheme::default())
-            .with_prompt("Enter master password")
-            .report(false)
-            .interact()
-            .context("Failed to read user input")
     }
 
     pub async fn authenticate_user(db: &SqlitePool, password: &str) -> Result<User> {

@@ -3,7 +3,6 @@ use std::path::Path;
 use anyhow::{bail, Result};
 use clap::Parser;
 use cli::Session;
-use dialoguer::{theme::ColorfulTheme, Confirm, Password};
 use io::edit_text;
 
 use tabled::{
@@ -22,6 +21,7 @@ mod cli;
 mod crypto;
 mod db;
 mod io;
+mod prompt;
 mod types;
 
 #[tokio::main]
@@ -36,10 +36,7 @@ async fn main() -> Result<()> {
                 bail!("A database already exists at {}", db::db_path()?);
             }
 
-            let master_password: String = Password::with_theme(&ColorfulTheme::default())
-                .with_prompt("Set a master password")
-                .with_confirmation("Confirm password", "Passwords do not match")
-                .interact()?;
+            let master_password: String = prompt::set_master_password()?;
 
             let user = user::User::new(&master_password)?;
 
@@ -87,7 +84,7 @@ async fn main() -> Result<()> {
                 sec.value = new_encrypted;
                 sec.update(&app.db).await?;
 
-                println!("Updated secret {}", sec.name);
+                println!("Updated secret '{}'", sec.name);
             }
         }
         cli::Command::Delete { name } => {
@@ -95,16 +92,32 @@ async fn main() -> Result<()> {
 
             let sec = Secret::get(&app.db, &name).await?;
 
-            let prompt = format!("Delete secret {}", sec.name);
-            let confirm = Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt(prompt)
-                .wait_for_newline(true)
-                .default(false)
-                .interact()?;
+            let prompt_msg = format!("Delete secret {}", sec.name);
+            let confirm = prompt::confirm(&prompt_msg, false)?;
 
             if confirm {
                 sec.delete(&app.db).await?;
             }
+        }
+        cli::Command::Rename { name, mut new_name } => {
+            let app = App::new(true).await?;
+
+            let mut sec = Secret::get(&app.db, &name).await?;
+
+            if new_name.is_none() {
+                new_name = Some(prompt::input("Enter new secret name")?);
+            }
+
+            let prompt_msg = format!(
+                "Rename secret '{}' to '{}'",
+                sec.name,
+                new_name.clone().unwrap()
+            );
+            if prompt::confirm(&prompt_msg, true)? {
+                sec.rename(&app.db, &new_name.unwrap()).await?;
+            }
+
+            println!("Done");
         }
         cli::Command::List => {
             let app = App::new(true).await?;

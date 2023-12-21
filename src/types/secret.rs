@@ -117,4 +117,20 @@ impl Secret {
             .map(|_| ())
             .context("Failed to delete secret")
     }
+
+    pub async fn rename(&mut self, db: &SqlitePool, new_name: &str) -> Result<()> {
+        sqlx::query!(
+            "update secrets set name = ? where name = ?",
+            new_name,
+            self.name
+        )
+        .execute(db)
+        .await
+        .map(|_| ())
+        .context("Failed to rename secret")?;
+
+        self.name = new_name.to_string();
+
+        Ok(())
+    }
 }
