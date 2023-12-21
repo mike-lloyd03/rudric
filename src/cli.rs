@@ -1,4 +1,5 @@
-use clap::{Parser, Subcommand};
+#![deny(missing_docs)]
+use clap::{Args, Parser, Subcommand};
 
 use crate::types::renv::ShellType;
 
@@ -31,8 +32,20 @@ pub enum Command {
         name: String,
     },
     List,
-    Session,
+    Session(SessionArgs),
     Env {
         shell: Option<ShellType>,
     },
+}
+
+#[derive(Args)]
+pub struct SessionArgs {
+    #[command(subcommand)]
+    pub command: Option<Session>,
+}
+
+#[derive(Subcommand)]
+pub enum Session {
+    New,
+    End,
 }

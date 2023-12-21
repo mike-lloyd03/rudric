@@ -2,3 +2,4 @@
 .env
 data.db
 .renv
+data.db-*

@@ -14,6 +14,10 @@ pub struct App {
 
 impl App {
     pub async fn new(check_session: bool) -> Result<Self> {
+        if !db::exists().await? {
+            bail!("Vault not found at {}", db::db_path()?)
+        }
+
         let db = db::connect().await?;
 
         if check_session {

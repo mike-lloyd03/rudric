@@ -2,6 +2,7 @@ use std::path::Path;
 
 use anyhow::{bail, Result};
 use clap::Parser;
+use cli::Session;
 use dialoguer::{theme::ColorfulTheme, Confirm, Password};
 use io::edit_text;
 
@@ -13,7 +14,7 @@ use types::{
     app::App,
     renv::Renv,
     secret::{ClearTextSecret, Secret},
-    session::SessionToken,
+    session::{SessionKey, SessionToken},
     user,
 };
 
@@ -130,13 +131,24 @@ async fn main() -> Result<()> {
 
             println!("{table}");
         }
-        cli::Command::Session => {
-            let app = App::new(false).await?;
+        cli::Command::Session(session_cmd) => match session_cmd.command {
+            Some(Session::End) => {
+                let app = App::new(true).await?;
 
-            let session_token = SessionToken::new(&app.db, app.master_key).await?;
-
-            println!("{session_token}");
-        }
+                if let Ok(st) = SessionToken::from_env() {
+                    let (session_key_id, _) = st.split_id()?;
+                    let session_key = SessionKey::get(&app.db, &session_key_id).await?;
+                    session_key.delete(&app.db).await?;
+                } else {
+                    bail!("Session token not found")
+                }
+            }
+            _ => {
+                let app = App::new(false).await?;
+                let session_token = SessionToken::new(&app.db, app.master_key).await?;
+                println!("{session_token}");
+            }
+        },
         cli::Command::Env { shell } => {
             let app = App::new(true).await?;
 

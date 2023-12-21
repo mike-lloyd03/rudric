@@ -12,7 +12,7 @@ use crate::crypto;
 const INVALID_TOKEN: &str = "Invalid session token";
 const EXPIRE_DURATION: Duration = Duration::hours(8);
 
-struct SessionKey {
+pub struct SessionKey {
     id: Uuid,
     key: SecretKey,
     expire_time: OffsetDateTime,
@@ -43,7 +43,7 @@ impl SessionKey {
         }
     }
 
-    async fn get(db: &SqlitePool, id: &Uuid) -> Result<Self> {
+    pub async fn get(db: &SqlitePool, id: &Uuid) -> Result<Self> {
         struct SessionKeyDB {
             id: Uuid,
             key: Vec<u8>,
@@ -80,7 +80,7 @@ impl SessionKey {
         .context("Failed to insert session key")
     }
 
-    async fn delete(&self, db: &SqlitePool) -> Result<()> {
+    pub async fn delete(&self, db: &SqlitePool) -> Result<()> {
         sqlx::query!("delete from session_keys where id = ?", self.id)
             .execute(db)
             .await
@@ -88,7 +88,7 @@ impl SessionKey {
             .context("Failed to delete session key")
     }
 
-    async fn delete_expired(db: &SqlitePool) -> Result<()> {
+    pub async fn delete_expired(db: &SqlitePool) -> Result<()> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
 
         sqlx::query!("delete from session_keys where expire_time < ?", now)
@@ -141,14 +141,7 @@ impl SessionToken {
     ///
     /// Additionally, any expired session keys in the database are also deleted.
     pub async fn into_master_key(self, db: &SqlitePool) -> Result<SecretKey> {
-        let session_token_bytes = b64.decode(self.0)?;
-
-        // Read the session key ID from the first 16 bytes of the session token
-        if session_token_bytes.len() < 16 {
-            bail!(INVALID_TOKEN)
-        }
-        let (session_id, encrypted_timed_key) = session_token_bytes.split_at(16);
-        let session_id = Uuid::from_bytes(session_id.try_into()?);
+        let (session_id, encrypted_timed_key) = self.split_id()?;
 
         // Fetch the session key from the database
         let session_key = match SessionKey::get(db, &session_id).await {
@@ -156,7 +149,7 @@ impl SessionToken {
             Err(_) => bail!(INVALID_TOKEN),
         };
 
-        let decrypted_timed_key = crypto::decrypt(&session_key.key, encrypted_timed_key)?;
+        let decrypted_timed_key = crypto::decrypt(&session_key.key, &encrypted_timed_key)?;
 
         // Read the expiration timestamp from the first 8 bytes of the decrypted timed key.
         if decrypted_timed_key.len() < 8 {
@@ -178,6 +171,16 @@ impl SessionToken {
 
         SecretKey::from_slice(decrypted_master_key)
             .context("Failed to create SecretKey from decrypted key")
+    }
+
+    pub fn split_id(self) -> Result<(Uuid, Vec<u8>)> {
+        let session_token_bytes = b64.decode(self.0)?;
+        if session_token_bytes.len() < 16 {
+            bail!(INVALID_TOKEN)
+        }
+        let (session_id, encrypted_timed_key) = session_token_bytes.split_at(16);
+        let session_id = Uuid::from_bytes(session_id.try_into()?);
+        Ok((session_id, encrypted_timed_key.to_vec()))
     }
 }
 
