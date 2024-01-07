@@ -12,9 +12,9 @@ pub fn confirm(prompt: &str, default: bool) -> Result<bool> {
 }
 
 /// Prompts the user to set a master password
-pub fn set_master_password() -> Result<String> {
+pub fn set_password(prompt: &str) -> Result<String> {
     Password::with_theme(&ColorfulTheme::default())
-        .with_prompt("Set a master password")
+        .with_prompt(prompt)
         .with_confirmation("Confirm password", "Passwords do not match")
         .interact()
         .map_err(Error::msg)

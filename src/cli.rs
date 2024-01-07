@@ -8,6 +8,8 @@ use crate::types::renv::ShellType;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+    #[arg(short, long)]
+    pub config_dir: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -46,6 +48,7 @@ pub enum Command {
     GenerateCompletions {
         shell: ShellType,
     },
+    ChangePassword,
 }
 
 #[derive(Args)]

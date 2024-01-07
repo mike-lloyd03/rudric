@@ -3,19 +3,9 @@ use std::{io::stdout, path::Path};
 use anyhow::{bail, Result};
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, shells};
-use cli::{Cli, Session};
-use io::edit_text;
-
 use tabled::{
     settings::{style::BorderColor, Color, Style},
     Table, Tabled,
-};
-use types::{
-    app::App,
-    renv::{Renv, ShellType},
-    secret::{ClearTextSecret, Secret},
-    session::{SessionKey, SessionToken},
-    user,
 };
 
 mod cli;
@@ -25,19 +15,31 @@ mod io;
 mod prompt;
 mod types;
 
+use cli::{Cli, Session};
+use io::edit_text;
+use types::{
+    app::App,
+    renv::Renv,
+    renv::ShellType,
+    secret::ClearSecret,
+    secret::Secret,
+    session::{SessionKey, SessionToken},
+    user::{self, User},
+};
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
+    // let config_dir = cli.config_dir.unwrap_or(default_config_dir()?);
+
     match cli.command {
         cli::Command::Init => {
-            let db_exists = db::exists().await?;
-
-            if db_exists {
+            if db::exists().await? {
                 bail!("A database already exists at {}", db::db_path()?);
             }
 
-            let master_password: String = prompt::set_master_password()?;
+            let master_password: String = prompt::set_password("Set master password")?;
 
             let user = user::User::new(&master_password)?;
 
@@ -55,7 +57,7 @@ async fn main() -> Result<()> {
                 bail!("Canceled")
             }
 
-            let sec = ClearTextSecret::new(&name, value, description);
+            let sec = ClearSecret::new(&name, value, description);
             let encrypted = sec.to_encrypted(&app.master_key)?;
             encrypted.store(&app.db).await?;
 
@@ -208,6 +210,30 @@ async fn main() -> Result<()> {
                 ShellType::Zsh => generate(shells::Zsh, &mut cmd, bin_name, &mut stdout()),
                 _ => bail!("Provided shell is not supported"),
             };
+        }
+        cli::Command::ChangePassword => {
+            let app = App::new(true).await?;
+            let new_password = prompt::set_password("Enter new master password")?;
+            let new_pwhash = crypto::hash_password(&new_password)?;
+            let new_salt = crypto::generate_salt()?.as_ref().to_vec();
+            let mut user = User::load(&app.db).await?;
+            let new_key = crypto::derive_key(&new_password, &new_salt)?;
+
+            let secrets = Secret::get_all(&app.db).await?;
+
+            let mut tx = app.db.begin().await?;
+
+            user.master_password_hash = new_pwhash.unprotected_as_encoded().to_string();
+            user.salt = new_salt;
+            user.update(&mut *tx).await?;
+
+            for secret in secrets {
+                let clear_secret = secret.to_cleartext(&app.master_key)?;
+                let reencrypted_secret = clear_secret.to_encrypted(&new_key)?;
+                reencrypted_secret.update(&mut *tx).await?;
+            }
+
+            tx.commit().await?;
         }
     }
 
