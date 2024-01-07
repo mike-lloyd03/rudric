@@ -3,22 +3,9 @@ use std::{io::stdout, path::Path};
 use anyhow::{bail, Result};
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, shells};
-use cli::{Cli, Session};
 use tabled::{
     settings::{style::BorderColor, Color, Style},
     Table, Tabled,
-};
-use types::{
-    renv::ShellType,
-    secret::Secret,
-    session::{SessionKey, SessionToken},
-    user::{self, User},
-};
-use utils::set_password;
-
-use crate::{
-    io::edit_text,
-    types::{app::App, renv::Renv, secret::ClearSecret},
 };
 
 mod cli;
@@ -28,6 +15,19 @@ mod io;
 mod prompt;
 mod types;
 mod utils;
+
+use cli::{Cli, Session};
+use io::edit_text;
+use types::{
+    app::App,
+    renv::Renv,
+    renv::ShellType,
+    secret::ClearSecret,
+    secret::Secret,
+    session::{SessionKey, SessionToken},
+    user::{self, User},
+};
+use utils::set_password;
 
 #[tokio::main]
 async fn main() -> Result<()> {
