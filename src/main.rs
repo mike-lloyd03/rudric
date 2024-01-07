@@ -37,7 +37,13 @@ async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
     let config_dir = match cli.config_dir {
-        Some(c) => PathBuf::from(c),
+        Some(c) => {
+            let p = PathBuf::from(c);
+            if !p.exists() {
+                bail!("The provided config directory does not exist")
+            }
+            p
+        }
         None => default_config_dir()?,
     };
 
