@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::{bail, Result};
 use orion::aead;
 use sqlx::SqlitePool;
@@ -12,12 +14,15 @@ pub struct App {
 }
 
 impl App {
-    pub async fn new(check_session: bool) -> Result<Self> {
-        if !db::exists().await? {
-            bail!("Vault not found at {}", db::db_path()?)
+    pub async fn new(config_dir: &Path, check_session: bool) -> Result<Self> {
+        if !db::exists(config_dir).await? {
+            bail!(
+                "Vault not found at {}",
+                db::db_path(config_dir).to_string_lossy()
+            )
         }
 
-        let db = db::connect().await?;
+        let db = db::connect(config_dir).await?;
 
         if check_session {
             if let Ok(st) = SessionToken::from_env() {

@@ -1,4 +1,7 @@
-use std::{io::stdout, path::Path};
+use std::{
+    io::stdout,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{bail, Result};
 use clap::{CommandFactory, Parser};
@@ -14,6 +17,7 @@ mod db;
 mod io;
 mod prompt;
 mod types;
+mod utils;
 
 use cli::{Cli, Session};
 use io::edit_text;
@@ -26,29 +30,36 @@ use types::{
     session::{SessionKey, SessionToken},
     user::{self, User},
 };
+use utils::default_config_dir;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
-    // let config_dir = cli.config_dir.unwrap_or(default_config_dir()?);
+    let config_dir = match cli.config_dir {
+        Some(c) => PathBuf::from(c),
+        None => default_config_dir()?,
+    };
 
     match cli.command {
         cli::Command::Init => {
-            if db::exists().await? {
-                bail!("A database already exists at {}", db::db_path()?);
+            if db::exists(&config_dir).await? {
+                bail!(
+                    "A database already exists at {}",
+                    db::db_path(&config_dir).to_string_lossy()
+                );
             }
 
             let master_password: String = prompt::set_password("Set master password")?;
 
             let user = user::User::new(&master_password)?;
 
-            let db = db::init().await?;
+            let db = db::init(&config_dir).await?;
 
             user.store(&db).await?;
         }
         cli::Command::Create { name, description } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let value = edit_text(b"", Some(&name))?;
             let value = std::str::from_utf8(&value)?;
@@ -64,7 +75,7 @@ async fn main() -> Result<()> {
             println!("Created secret {name}")
         }
         cli::Command::Get { name, json } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
             let cleartext = sec.to_cleartext(&app.master_key)?;
@@ -76,7 +87,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Edit { name, description } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let mut sec = Secret::get(&app.db, &name).await?;
 
@@ -115,7 +126,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Delete { name } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let sec = Secret::get(&app.db, &name).await?;
 
@@ -130,7 +141,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::Rename { name, mut new_name } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let mut sec = Secret::get(&app.db, &name).await?;
 
@@ -151,7 +162,7 @@ async fn main() -> Result<()> {
             }
         }
         cli::Command::List => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             #[derive(Tabled)]
             struct SecretsTable {
@@ -176,7 +187,7 @@ async fn main() -> Result<()> {
         }
         cli::Command::Session(session_cmd) => match session_cmd.command {
             Some(Session::End) => {
-                let app = App::new(true).await?;
+                let app = App::new(&config_dir, true).await?;
 
                 if let Ok(st) = SessionToken::from_env() {
                     let (session_key_id, _) = st.split_id()?;
@@ -187,13 +198,13 @@ async fn main() -> Result<()> {
                 }
             }
             _ => {
-                let app = App::new(false).await?;
+                let app = App::new(&config_dir, false).await?;
                 let session_token = SessionToken::new(&app.db, app.master_key).await?;
                 println!("{session_token}");
             }
         },
         cli::Command::Env { shell } => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
 
             let path = Path::new(".renv");
             let renv = Renv::load(&app, path).await?;
@@ -212,7 +223,7 @@ async fn main() -> Result<()> {
             };
         }
         cli::Command::ChangePassword => {
-            let app = App::new(true).await?;
+            let app = App::new(&config_dir, true).await?;
             let new_password = prompt::set_password("Enter new master password")?;
             let new_pwhash = crypto::hash_password(&new_password)?;
             let new_salt = crypto::generate_salt()?.as_ref().to_vec();
