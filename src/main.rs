@@ -14,7 +14,6 @@ mod db;
 mod io;
 mod prompt;
 mod types;
-mod utils;
 
 use cli::{Cli, Session};
 use io::edit_text;
@@ -27,7 +26,6 @@ use types::{
     session::{SessionKey, SessionToken},
     user::{self, User},
 };
-use utils::set_password;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -41,7 +39,7 @@ async fn main() -> Result<()> {
                 bail!("A database already exists at {}", db::db_path()?);
             }
 
-            let master_password: String = prompt::set_master_password()?;
+            let master_password: String = prompt::set_password("Set master password")?;
 
             let user = user::User::new(&master_password)?;
 
@@ -215,7 +213,7 @@ async fn main() -> Result<()> {
         }
         cli::Command::ChangePassword => {
             let app = App::new(true).await?;
-            let new_password = set_password("Enter new master password")?;
+            let new_password = prompt::set_password("Enter new master password")?;
             let new_pwhash = crypto::hash_password(&new_password)?;
             let new_salt = crypto::generate_salt()?.as_ref().to_vec();
             let mut user = User::load(&app.db).await?;
