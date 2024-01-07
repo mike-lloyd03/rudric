@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use orion::aead;
-use sqlx::{prelude::FromRow, SqlitePool};
+use sqlx::{prelude::FromRow, Executor, Sqlite, SqlitePool};
 
 use crate::crypto;
 
@@ -24,14 +24,30 @@ impl User {
     }
 
     pub async fn store(&self, db: &SqlitePool) -> Result<()> {
-        Ok(sqlx::query!(
+        sqlx::query!(
             "insert into user (id, master_password_hash, salt) values (1, ?, ?)",
             self.master_password_hash,
             self.salt
         )
         .execute(db)
-        .await
-        .map(|_| ())?)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn update<'a, E>(&self, executor: E) -> Result<()>
+    where
+        E: Executor<'a, Database = Sqlite>,
+    {
+        sqlx::query!(
+            "update user set master_password_hash = ?, salt = ? where id = 1",
+            self.master_password_hash,
+            self.salt
+        )
+        .execute(executor)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn load(db: &SqlitePool) -> Result<Self> {
@@ -45,7 +61,7 @@ impl User {
     }
 
     pub fn master_key(&self, password: &str) -> Result<aead::SecretKey> {
-        if !crypto::verify_hash(password, &self.master_password_hash) {
+        if !self.authenticate(password) {
             bail!("Invalid master password")
         }
 

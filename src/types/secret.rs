@@ -1,7 +1,7 @@
 use colored_json::to_colored_json_auto;
 use orion::aead;
 use serde::Serialize;
-use sqlx::{prelude::*, SqlitePool};
+use sqlx::{prelude::*, Sqlite, SqlitePool};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -17,37 +17,11 @@ pub struct Secret {
     pub description: Option<String>,
 }
 #[derive(Debug, Serialize)]
-pub struct ClearTextSecret {
+pub struct ClearSecret {
     pub id: Option<i64>,
     pub name: String,
     pub value: String,
     pub description: Option<String>,
-}
-
-impl ClearTextSecret {
-    pub fn new(name: &str, value: &str, description: Option<String>) -> Self {
-        Self {
-            id: None,
-            name: name.into(),
-            value: value.into(),
-            description,
-        }
-    }
-
-    pub fn to_encrypted(&self, key: &aead::SecretKey) -> Result<Secret> {
-        let encrypted_bytes = crypto::encrypt(key, self.value.as_bytes())?;
-
-        Ok(Secret {
-            id: None,
-            name: self.name.clone(),
-            value: encrypted_bytes,
-            description: self.description.clone(),
-        })
-    }
-
-    pub fn to_json(&self) -> Result<String> {
-        to_colored_json_auto(&self).context("Failed to format secret as json")
-    }
 }
 
 impl Secret {
@@ -84,7 +58,10 @@ impl Secret {
         .context("Failed to store secret")
     }
 
-    pub async fn update(&self, db: &SqlitePool) -> Result<()> {
+    pub async fn update<'a, E>(&self, executor: E) -> Result<()>
+    where
+        E: Executor<'a, Database = Sqlite>,
+    {
         sqlx::query!(
             "update secrets set name = ?, value = ?, description = ? where id = ?",
             self.name,
@@ -92,17 +69,18 @@ impl Secret {
             self.description,
             self.id
         )
-        .execute(db)
+        .execute(executor)
         .await
-        .map(|_| ())
-        .context("Failed to update secret")
+        .context("Failed to update secret")?;
+
+        Ok(())
     }
 
-    pub fn to_cleartext(&self, key: &aead::SecretKey) -> Result<ClearTextSecret> {
+    pub fn to_cleartext(&self, key: &aead::SecretKey) -> Result<ClearSecret> {
         let cleartext_value_bytes = crypto::decrypt(key, &self.value)?;
         let cleartext_value = std::str::from_utf8(&cleartext_value_bytes)?;
 
-        Ok(ClearTextSecret {
+        Ok(ClearSecret {
             id: self.id,
             name: self.name.clone(),
             value: cleartext_value.to_string(),
@@ -132,5 +110,31 @@ impl Secret {
         self.name = new_name.to_string();
 
         Ok(())
+    }
+}
+
+impl ClearSecret {
+    pub fn new(name: &str, value: &str, description: Option<String>) -> Self {
+        Self {
+            id: None,
+            name: name.into(),
+            value: value.into(),
+            description,
+        }
+    }
+
+    pub fn to_encrypted(&self, key: &aead::SecretKey) -> Result<Secret> {
+        let encrypted_bytes = crypto::encrypt(key, self.value.as_bytes())?;
+
+        Ok(Secret {
+            id: self.id,
+            name: self.name.clone(),
+            value: encrypted_bytes,
+            description: self.description.clone(),
+        })
+    }
+
+    pub fn to_json(&self) -> Result<String> {
+        to_colored_json_auto(&self).context("Failed to format secret as json")
     }
 }
