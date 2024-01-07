@@ -54,8 +54,9 @@ impl Secret {
         )
         .execute(db)
         .await
-        .map(|_| ())
-        .context("Failed to store secret")
+        .context("Failed to store secret")?;
+
+        Ok(())
     }
 
     pub async fn update<'a, E>(&self, executor: E) -> Result<()>
@@ -92,8 +93,9 @@ impl Secret {
         sqlx::query!("delete from secrets where name = ?", self.name)
             .execute(db)
             .await
-            .map(|_| ())
-            .context("Failed to delete secret")
+            .context("Failed to delete secret")?;
+
+        Ok(())
     }
 
     pub async fn rename(&mut self, db: &SqlitePool, new_name: &str) -> Result<()> {
@@ -104,7 +106,6 @@ impl Secret {
         )
         .execute(db)
         .await
-        .map(|_| ())
         .context("Failed to rename secret")?;
 
         self.name = new_name.to_string();

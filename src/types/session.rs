@@ -76,16 +76,18 @@ impl SessionKey {
         )
         .execute(db)
         .await
-        .map(|_| ())
-        .context("Failed to insert session key")
+        .context("Failed to insert session key")?;
+
+        Ok(())
     }
 
     pub async fn delete(&self, db: &SqlitePool) -> Result<()> {
         sqlx::query!("delete from session_keys where id = ?", self.id)
             .execute(db)
             .await
-            .map(|_| ())
-            .context("Failed to delete session key")
+            .context("Failed to delete session key")?;
+
+        Ok(())
     }
 
     pub async fn delete_expired(db: &SqlitePool) -> Result<()> {
@@ -94,8 +96,9 @@ impl SessionKey {
         sqlx::query!("delete from session_keys where expire_time < ?", now)
             .execute(db)
             .await
-            .map(|_| ())
-            .context("Failed to delete expired session key")
+            .context("Failed to delete expired session key")?;
+
+        Ok(())
     }
 }
 
