@@ -1,7 +1,7 @@
 // #![deny(missing_docs)]
 use clap::{Args, Parser, Subcommand};
 
-use crate::types::renv::ShellType;
+use crate::types::shell_type::ShellType;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

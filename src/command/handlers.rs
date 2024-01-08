@@ -9,14 +9,16 @@ use tabled::{
 };
 
 use crate::{
+    config::Config,
     crypto, db,
     io::edit_text,
     prompt,
     types::{
         app::App,
-        renv::{Renv, ShellType},
+        renv::Renv,
         secret::{ClearSecret, Secret},
         session::{SessionKey, SessionToken},
+        shell_type::ShellType,
         user::{self, User},
     },
 };
@@ -217,10 +219,11 @@ pub async fn handle_session(config_dir: &Path, session_cmd: SessionArgs) -> Resu
 
 pub async fn handle_env(config_dir: &Path, shell: Option<ShellType>) -> Result<()> {
     let app = App::new(config_dir, true).await?;
+    let config = Config::load(config_dir)?;
 
     let path = Path::new(".renv");
     let renv = Renv::load(&app, path).await?;
-    let shell = shell.unwrap_or_default();
+    let shell = shell.unwrap_or(config.default_shell.unwrap_or_default());
 
     println!("{}", renv.to_shell(shell));
 

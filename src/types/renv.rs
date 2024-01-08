@@ -1,25 +1,15 @@
 use std::{fs, path::Path};
 
 use anyhow::{anyhow, bail, Result};
-use clap::ValueEnum;
 use regex::Regex;
 
 use crate::types::secret::Secret;
 
-use super::{app::App, secret::SECRET_NOT_FOUND};
+use super::{app::App, secret::SECRET_NOT_FOUND, shell_type::ShellType};
 
 #[derive(Debug)]
 pub struct Renv {
     pub variables: Vec<Variable>,
-}
-
-#[derive(Clone, Default, ValueEnum)]
-pub enum ShellType {
-    #[default]
-    Fish,
-    Bash,
-    Zsh,
-    Nu,
 }
 
 #[derive(Debug)]

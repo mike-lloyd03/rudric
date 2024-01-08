@@ -26,6 +26,7 @@ regex = "1.10.2"
 tabled = { version = "0.14.0", features = ["color"] }
 time = "0.3.30"
 clap_complete = "4.4.4"
+serde_yaml = "0.9.30"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
