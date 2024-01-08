@@ -54,11 +54,11 @@ pub enum Command {
 #[derive(Args)]
 pub struct SessionArgs {
     #[command(subcommand)]
-    pub command: Option<Session>,
+    pub command: Option<SessionCmd>,
 }
 
 #[derive(Subcommand)]
-pub enum Session {
+pub enum SessionCmd {
     New,
     End,
 }
