@@ -1,4 +1,4 @@
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 use clap::{Args, Parser, Subcommand};
 
 use crate::types::renv::ShellType;

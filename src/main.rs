@@ -3,19 +3,13 @@ use std::path::PathBuf;
 use anyhow::{bail, Result};
 use clap::Parser;
 
-mod command;
-mod crypto;
-mod db;
-mod io;
-mod prompt;
-mod types;
-mod utils;
-
-use command::{
-    cli::{Cli, Command},
-    handlers::*,
+use rudric::{
+    command::{
+        cli::{Cli, Command},
+        handlers::*,
+    },
+    utils::default_config_dir,
 };
-use utils::default_config_dir;
 
 #[tokio::main]
 async fn main() -> Result<()> {
