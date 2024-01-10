@@ -1,7 +1,7 @@
 use clap::ValueEnum;
 use serde::Deserialize;
 
-#[derive(Clone, Default, ValueEnum, Deserialize)]
+#[derive(Debug, Clone, Default, ValueEnum, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ShellType {
     #[default]

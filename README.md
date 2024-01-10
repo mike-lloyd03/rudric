@@ -26,6 +26,8 @@ This would create an environment variable called `GITHUB_TOKEN` which is set to 
 rudric env fish | source
 ```
 
+Additionally, a default shell can be specified by setting it in the configuration file.
+
 # Getting Stared
 
 ## Initialization
@@ -56,7 +58,7 @@ To avoid having to type your master password every time you interact with the va
 set -x RUDRIC_SESSION $(rudric session)
 ```
 
-Session tokens are valid for 8 hours. This is not currently user configurable but will be in the future. The current session token can be revoked with `rudric session end`.
+Session tokens are valid for 8 hours by default but this can be configured. The current session token can be revoked with `rudric session end`.
 
 # Encryption
 

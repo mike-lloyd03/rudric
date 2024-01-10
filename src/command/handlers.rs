@@ -1,4 +1,7 @@
-use std::{io::stdout, path::Path};
+use std::{
+    io::{stdout, Read},
+    path::Path,
+};
 
 use anyhow::{bail, Result};
 use clap::CommandFactory;
@@ -51,14 +54,18 @@ pub async fn handle_create(
 ) -> Result<()> {
     let app = App::new(config_dir, true).await?;
 
-    let value = edit_text(b"", Some(&name))?;
-    let value = std::str::from_utf8(&value)?;
+    let mut value = String::new();
+    std::io::stdin().read_to_string(&mut value).unwrap();
 
     if value.is_empty() {
-        bail!("Canceled")
+        let value_from_editor = edit_text(b"", Some(&name))?;
+        value = std::str::from_utf8(&value_from_editor)?.to_string();
+        if value.is_empty() {
+            bail!("Canceled")
+        }
     }
 
-    let sec = ClearSecret::new(&name, value, description);
+    let sec = ClearSecret::new(&name, &value, description);
     let encrypted = sec.to_encrypted(&app.master_key)?;
     encrypted.store(&app.db).await?;
 
@@ -209,7 +216,10 @@ pub async fn handle_session(config_dir: &Path, session_cmd: SessionArgs) -> Resu
         }
         _ => {
             let app = App::new(config_dir, false).await?;
-            let session_token = SessionToken::new(&app.db, app.master_key).await?;
+            let config = Config::load(config_dir)?;
+
+            let session_token =
+                SessionToken::new(&app.db, app.master_key, config.session_lifetime).await?;
             println!("{session_token}");
         }
     }
