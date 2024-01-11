@@ -28,7 +28,7 @@ rudric env fish | source
 
 Additionally, a default shell can be specified by setting it in the configuration file.
 
-# Getting Stared
+# Getting Started
 
 ## Initialization
 
