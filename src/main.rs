@@ -51,8 +51,8 @@ async fn main() -> Result<()> {
         Command::Session(session_cmd) => {
             handle_session(&config_dir, session_cmd).await?;
         }
-        Command::Env { shell } => {
-            handle_env(&config_dir, shell).await?;
+        Command::Env { shell, file } => {
+            handle_env(&config_dir, shell, file).await?;
         }
         Command::ChangePassword => {
             handle_change_password(&config_dir).await?;

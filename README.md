@@ -88,6 +88,18 @@ If the `RUDRIC_SESSION` token is set in the environment:
 - The expiration time and master key are decrypted from the session token using the session key
 - If the token is not expired, the master key will be used to interact with secrets in the vault.
 
+# Configuration
+
+Rudric can be configured with a yaml file. By default, this file is stored in `XDG_CONFIG/rudric/config.yaml` (`$HOME/.config/rudric/config.yaml` on Linux and Mac). All config options are optional. An example config file might look like this:
+
+```yaml
+# Options are: bash, zsh, fish, nu
+default_shell: fish
+
+# Specify the default length of time that a session token is valid for
+session_lifetime: 6h
+```
+
 # Crates
 
 Encryption is all accomplished using the fantastic [Orion](https://github.com/orion-rs/orion) library.

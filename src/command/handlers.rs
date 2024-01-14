@@ -227,7 +227,11 @@ pub async fn handle_session(config_dir: &Path, session_cmd: SessionArgs) -> Resu
     Ok(())
 }
 
-pub async fn handle_env(config_dir: &Path, shell: Option<ShellType>) -> Result<()> {
+pub async fn handle_env(
+    config_dir: &Path,
+    shell: Option<ShellType>,
+    file: Option<String>,
+) -> Result<()> {
     let app = App::new(config_dir, true).await?;
     let config = Config::load(config_dir)?;
 
