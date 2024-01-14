@@ -9,14 +9,16 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Ensure the the version in Cargo.toml matches the tag
   validate-tag:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: test $(grep '^version' Cargo.toml | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p') = ${{ github.ref }}
+      - run: test $(grep '^version' Cargo.toml | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/refs\/tags\/v\1/p') = ${{ github.ref }}
 
   build-linux:
     runs-on: ubuntu-latest
+    needs: validate-tag
     steps:
       - uses: actions/checkout@v3
       - name: build
@@ -31,6 +33,7 @@ jobs:
 
   build-mac:
     runs-on: macOS-latest
+    needs: validate-tag
     steps:
       - uses: actions/checkout@v3
       - name: build
