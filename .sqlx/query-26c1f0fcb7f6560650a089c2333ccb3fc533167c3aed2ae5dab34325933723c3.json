@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update user set master_password_hash = ?, salt = ? where id = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "26c1f0fcb7f6560650a089c2333ccb3fc533167c3aed2ae5dab34325933723c3"
+}

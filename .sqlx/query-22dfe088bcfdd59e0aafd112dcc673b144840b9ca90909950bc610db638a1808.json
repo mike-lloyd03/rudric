@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select id as \"id: _\", key, expire_time from session_keys where id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: _",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "key",
+        "ordinal": 1,
+        "type_info": "Blob"
+      },
+      {
+        "name": "expire_time",
+        "ordinal": 2,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "22dfe088bcfdd59e0aafd112dcc673b144840b9ca90909950bc610db638a1808"
+}

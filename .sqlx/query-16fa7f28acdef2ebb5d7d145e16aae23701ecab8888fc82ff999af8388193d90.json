@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into user (id, master_password_hash, salt) values (1, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "16fa7f28acdef2ebb5d7d145e16aae23701ecab8888fc82ff999af8388193d90"
+}

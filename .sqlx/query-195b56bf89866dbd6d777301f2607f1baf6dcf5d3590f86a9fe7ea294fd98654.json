@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select * from user limit 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "master_password_hash",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "salt",
+        "ordinal": 2,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "195b56bf89866dbd6d777301f2607f1baf6dcf5d3590f86a9fe7ea294fd98654"
+}

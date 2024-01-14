@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update secrets set name = ?, value = ?, description = ? where id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "296cc5cabd6ce77d4be94cdc09e5c78f6bd802fdd99d37e37e377ad60cb0e233"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "delete from session_keys where expire_time < ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "15c385d044f8ce8731a953256e3946e6c1a098545a6b40a5c85374968251be50"
+}
