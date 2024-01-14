@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: test $(grep '^version' Cargo.toml | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p') = ${{ github.ref }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: cargo build --release
+      - name: make tarball
+        run: mkdir rudric-linux && cp target/release/rudric README.md rudric-linux && tar -czf rudric-linux.tar.gz rudric-linux
+      - name: upload tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: uploads
+          path: rudric-linux.tar.gz
+
+  build-mac:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: cargo build --release
+      - name: make zip
+        run: mkdir rudric-mac && cp target/release/rudric README.md rudric-mac && zip -r rudric-mac.zip rudric-mac
+      - name: upload zip
+        uses: actions/upload-artifact@v3
+        with:
+          name: uploads
+          path: rudric-mac.zip
+
+  upload-to-release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-linux
+      - build-mac
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: download artifacts
+        id: download_artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: uploads
+          path: uploads
+
+      - name: upload linux binary
+        id: upload-linux
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.download_artifacts.outputs.download-path }}/rudric-linux.tar.gz
+          asset_name: rudric-linux.tar.gz
+          asset_content_type: application/gzip
+
+      - name: upload mac binary
+        id: upload-mac
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.download_artifacts.outputs.download-path }}/rudric-mac.zip
+          asset_name: rudric-mac.zip
+          asset_content_type: application/zip
