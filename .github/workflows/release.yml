@@ -63,4 +63,4 @@ jobs:
         with:
           files: |
             uploads/rudric-linux.tar.gz
-            uploads/rudric-mac.tar.gz
+            uploads/rudric-mac.zip
