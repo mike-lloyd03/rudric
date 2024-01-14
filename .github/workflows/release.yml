@@ -52,9 +52,15 @@ jobs:
       - build-linux
       - build-mac
     steps:
-      - name: Release
+      - name: download artifacts
+        id: download_artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: uploads
+          path: uploads
+      - name: release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            rudric-linux.tar.gz
-            rudric-mac.tar.gz
+            uploads/rudric-linux.tar.gz
+            uploads/rudric-mac.tar.gz
