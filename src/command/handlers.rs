@@ -54,16 +54,11 @@ pub async fn handle_create(
 ) -> Result<()> {
     let app = App::new(config_dir, true).await?;
 
-    let mut value = String::new();
-    std::io::stdin().read_to_string(&mut value).unwrap();
-
-    if value.is_empty() {
-        let value_from_editor = edit_text(b"", Some(&name))?;
-        value = std::str::from_utf8(&value_from_editor)?.to_string();
-        if value.is_empty() {
-            bail!("Canceled")
-        }
+    let value_bytes = edit_text(b"", Some(&name))?;
+    if value_bytes.is_empty() {
+        bail!("Canceled")
     }
+    let value = std::str::from_utf8(&value_bytes)?.to_string();
 
     let sec = ClearSecret::new(&name, &value, description);
     let encrypted = sec.to_encrypted(&app.master_key)?;
