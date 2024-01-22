@@ -78,7 +78,7 @@ pub enum Command {
     /// environment variables. The output of this command must be sourced with something like
     /// `rudric env | source`
     Env {
-        /// The shell format to use. Defaults to bash but a default can be specified in the config
+        /// The shell format to use. Defaults to bash but an alternate can be specified in the config
         /// file.
         shell: Option<ShellType>,
 

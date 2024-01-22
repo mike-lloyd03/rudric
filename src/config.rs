@@ -11,6 +11,7 @@ pub struct Config {
     pub default_shell: Option<ShellType>,
     #[serde(default, deserialize_with = "deserialize_option_duration_time")]
     pub session_lifetime: Option<time::Duration>,
+    pub renv_filename: Option<String>,
 }
 
 impl Config {
@@ -46,7 +47,7 @@ mod session_tests {
         let mut file = File::create(config_path)?;
         file.write_all(b"default_shell: fish\nsession_lifetime: 6h")?;
 
-        let config = Config::load(&Path::new(test_dir))?;
+        let config = Config::load(Path::new(test_dir))?;
 
         assert_eq!(config.default_shell, Some(ShellType::Fish));
         assert_eq!(config.session_lifetime, Some(Duration::hours(6)));
@@ -65,7 +66,7 @@ mod session_tests {
         let mut file = File::create(config_path)?;
         file.write_all(b"default_shell: fish")?;
 
-        let config = Config::load(&Path::new(test_dir))?;
+        let config = Config::load(Path::new(test_dir))?;
 
         assert_eq!(config.default_shell, Some(ShellType::Fish));
         assert_eq!(config.session_lifetime, None);

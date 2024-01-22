@@ -235,9 +235,15 @@ pub async fn handle_env(
     let app = App::new(config_dir, true).await?;
     let config = Config::load(config_dir)?;
 
-    let path = &file.unwrap_or_else(|| ".renv".into());
+    let renv_file = if let Some(file) = file {
+        file
+    } else if let Some(renv_filename) = config.renv_filename {
+        renv_filename
+    } else {
+        ".renv".to_string()
+    };
 
-    let renv = Renv::load(&app, Path::new(path)).await?;
+    let renv = Renv::load(&app, Path::new(&renv_file)).await?;
     let shell = shell.unwrap_or(config.default_shell.unwrap_or_default());
 
     println!("{}", renv.to_shell(shell));

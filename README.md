@@ -18,15 +18,24 @@ I use `.env` files a lot to store sensitive data like API keys and personal acce
 
 ```bash
 GITHUB_TOKEN={{personal_github_token}}
+GITHUB_API=https://api.github.com
 ```
 
-This would create an environment variable called `GITHUB_TOKEN` which is set to the value of a secret in your vault called `personal_github_token`. Using `rudric env <shell_name>`, these variables can be set in your environment.
+This would create an environment variable called `GITHUB_TOKEN` which is set to the value of a secret in your vault called `personal_github_token`. Additionally, non-secret values can be stored here as well and they will also be set in the environment.
+
+Multiple secrets can be used in a single environment variable. Additionally, string interpolation is supported.
+
+```bash
+DATABASE_URL=postgres://{{pg_user}}:{{pg_pass}}@localhost:5432
+```
+
+Using `rudric env <shell_name>`, these variables can be set in your environment.
 
 ```bash
 rudric env fish | source
 ```
 
-Additionally, a default shell can be specified by setting it in the configuration file.
+A default shell can be specified by setting it in the configuration file.
 
 # Getting Started
 
@@ -99,6 +108,9 @@ default_shell: fish
 
 # Specify the default length of time that a session token is valid for
 session_lifetime: 6h
+
+# Specify the name of the file to use in the CWD for setting environment variables (default ".renv")
+renv_filename: .env
 ```
 
 # Crates
