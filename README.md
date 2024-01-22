@@ -42,13 +42,14 @@ Secrets can be created, fetched, edited, and deleted.
 rudric create <new_secret_name>
 ```
 
-A text editor will be opened (whatever is defined by `EDITOR` or `VISUAL` environment variables). Currently, this is the only way to create a secret. In the future, secrets can be created from the context of a file or by reading from stdin (piping from another process).
+A text editor will be opened (whatever is defined by `EDITOR` or `VISUAL` environment variables). Currently, this is the only way to create a secret. In the future, secrets can be created from the content of a file or by reading from stdin (piping from another process).
 
 The following other commands are supported:
 
 - edit
 - list
 - delete (asks for confirmation)
+- change-password
 
 ## Sessions
 
