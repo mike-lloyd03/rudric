@@ -110,10 +110,10 @@ impl Renv {
         for v in &self.variables {
             let line = match shell_type {
                 ShellType::Fish => {
-                    format! {"set -x {} {}\n", v.name, v.value}
+                    format! {"set -x {} '{}'\n", v.name, v.value}
                 }
                 ShellType::Bash | ShellType::Zsh => {
-                    format! {"export {}={}\n", v.name, v.value}
+                    format! {"export {}='{}'\n", v.name, v.value}
                 }
                 ShellType::Nu => {
                     format! {"$env.{} = '{}'\n", v.name, v.value}
