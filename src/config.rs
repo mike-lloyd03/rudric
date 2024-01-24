@@ -19,9 +19,7 @@ impl Config {
         let config_file_path = config_dir.join("config.yaml");
         let config_file = match std::fs::File::open(config_file_path) {
             Ok(c) => c,
-            Err(e) => {
-                eprintln!("Failed to open config file: {e}");
-                eprintln!("Using defaults");
+            Err(_) => {
                 return Ok(Self::default());
             }
         };

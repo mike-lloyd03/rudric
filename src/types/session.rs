@@ -146,7 +146,7 @@ impl SessionToken {
 
     /// Returns the expiration time of the token
     pub async fn get_expire_time(&self, db: &SqlitePool) -> Result<OffsetDateTime> {
-        let (_, decrypted_timed_key) = self.decrypt_timed_key(&db).await?;
+        let (_, decrypted_timed_key) = self.decrypt_timed_key(db).await?;
 
         let (expire_time, _) = split_timed_key(&decrypted_timed_key)?;
 
@@ -161,7 +161,7 @@ impl SessionToken {
     ///
     /// Additionally, any expired session keys in the database are also deleted.
     pub async fn into_master_key(self, db: &SqlitePool) -> Result<SecretKey> {
-        let (session_key, decrypted_timed_key) = self.decrypt_timed_key(&db).await?;
+        let (session_key, decrypted_timed_key) = self.decrypt_timed_key(db).await?;
 
         let (expire_time, secret_key) = split_timed_key(&decrypted_timed_key)?;
 

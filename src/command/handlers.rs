@@ -1,7 +1,4 @@
-use std::{
-    io::{stdout, Read},
-    path::Path,
-};
+use std::{io::stdout, path::Path};
 
 use anyhow::{bail, Result};
 use clap::CommandFactory;
