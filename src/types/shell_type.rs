@@ -9,4 +9,5 @@ pub enum ShellType {
     Fish,
     Zsh,
     Nu,
+    Direnv,
 }
