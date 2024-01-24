@@ -133,7 +133,7 @@ $(rudric env direnv)
 
 Changing into the directory with both a `.envrc` and `.renv` file will automatically source your encrypted secrets in the environment.
 
-> ![IMPORTANT]
+> [!IMPORTANT]
 > If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail as input will not be passed to Rudric. I'm working on a solution for this but for now, start a session with `rudric session` first.
 
 # Crates
