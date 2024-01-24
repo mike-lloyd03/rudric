@@ -37,7 +37,7 @@ serde_yaml = "0.9.30"
 duration-str = "0.7.1"
 
 [dev-dependencies]
-assert_cmd = "2.0.12"
+assert_cmd = "2.0.13"
 rexpect = "0.5.0"
 
 [profile.dev.package.sqlx-macros]
