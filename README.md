@@ -31,8 +31,16 @@ DATABASE_URL=postgres://{{pg_user}}:{{pg_pass}}@localhost:5432
 
 Using `rudric env <shell_name>`, these variables can be set in your environment.
 
-```bash
+**fish**:
+
+```fish
 rudric env fish | source
+```
+
+**bash**:
+
+```bash
+source <(rudric env bash)
 ```
 
 A default shell can be specified by setting it in the configuration file.
@@ -112,6 +120,21 @@ session_lifetime: 6h
 # Specify the name of the file to use in the CWD for setting environment variables (default ".renv")
 renv_filename: .env
 ```
+
+# direnv
+
+Rudric includes support for [`direnv`](https://github.com/direnv/direnv). However, in order to use it, you will have to start a Rudric session before using `direnv`.
+
+Simply add the following to your `.envrc` file:
+
+```
+$(rudric env direnv)
+```
+
+Changing into the directory with both a `.envrc` and `.renv` file will automatically source your encrypted secrets in the environment.
+
+> ![IMPORTANT]
+> If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail as input will not be passed to Rudric. I'm working on a solution for this but for now, start a session with `rudric session` first.
 
 # Crates
 

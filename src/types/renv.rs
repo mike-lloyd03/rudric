@@ -72,7 +72,13 @@ impl Renv {
     // Loads the given `path` and parses it's contents for variable names and secret names. Secret
     // names will be replaced with their secret values.
     pub async fn load(app: &App, path: &Path) -> Result<Self> {
-        let contents = fs::read_to_string(path)?;
+        let contents = match fs::read_to_string(path) {
+            Ok(c) => c,
+            Err(e) => bail!(
+                "Failed to load file '{}': {e}",
+                path.to_str().unwrap_or_default()
+            ),
+        };
         let lines: Vec<String> = contents.lines().map(|l| l.trim().to_string()).collect();
 
         let mut variables = vec![];
@@ -110,13 +116,16 @@ impl Renv {
         for v in &self.variables {
             let line = match shell_type {
                 ShellType::Fish => {
-                    format! {"set -x {} '{}'\n", v.name, v.value}
+                    format! {"set -x '{}' '{}';", v.name, v.value}
                 }
                 ShellType::Bash | ShellType::Zsh => {
-                    format! {"export {}='{}'\n", v.name, v.value}
+                    format! {"export '{}'='{}';", v.name, v.value}
                 }
                 ShellType::Nu => {
-                    format! {"$env.{} = '{}'\n", v.name, v.value}
+                    format! {"$env.{} = '{}';", v.name, v.value}
+                }
+                ShellType::Direnv => {
+                    format! {"export {}={}\n", v.name, v.value}
                 }
             };
 
