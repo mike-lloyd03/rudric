@@ -26,7 +26,7 @@ jobs:
       - name: make tarball
         run: mkdir rudric-linux && cp target/release/rudric README.md rudric-linux && tar -czf rudric-linux.tar.gz rudric-linux
       - name: upload tarball
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: uploads
           path: rudric-linux.tar.gz
@@ -41,7 +41,7 @@ jobs:
       - name: make zip
         run: mkdir rudric-mac && cp target/release/rudric README.md rudric-mac && zip -r rudric-mac.zip rudric-mac
       - name: upload zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: uploads
           path: rudric-mac.zip
