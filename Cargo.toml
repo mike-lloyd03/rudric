@@ -2,6 +2,13 @@
 name = "rudric"
 version = "0.1.2"
 edition = "2021"
+license = "MIT"
+authors = ["Mike Lloyd"]
+keywords = ["passwords", "secrets", "cli"]
+categories = ["command-line-utilities", "cryptography"]
+description = "CLI tool for managing secrets in a secure way"
+repository = "https://github.com/mike-lloyd03/rudric"
+
 
 [dependencies]
 anyhow = "1.0.75"
