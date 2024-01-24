@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: download artifacts
         id: download_artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: uploads
           path: uploads
