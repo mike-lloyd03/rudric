@@ -11,7 +11,7 @@ repository = "https://github.com/mike-lloyd03/rudric"
 
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.79"
 clap = { version = "4.4.11", features = ["derive", "wrap_help"] }
 sqlx = { version = "0.7.3", features = [
   "sqlite",
