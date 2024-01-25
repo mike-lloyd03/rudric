@@ -108,17 +108,17 @@ If the `RUDRIC_SESSION` token is set in the environment:
 
 # Configuration
 
-Rudric can be configured with a yaml file. By default, this file is stored in `XDG_CONFIG/rudric/config.yaml` (`$HOME/.config/rudric/config.yaml` on Linux and Mac). All config options are optional. An example config file might look like this:
+Rudric can be configured with a toml file. By default, this file is stored in `XDG_CONFIG/rudric/config.toml` (`$HOME/.config/rudric/config.toml` on Linux and Mac). All config options are optional. An example config file might look like this:
 
-```yaml
+```toml
 # Options are: bash, zsh, fish, nu
-default_shell: fish
+default_shell = "fish"
 
 # Specify the default length of time that a session token is valid for
-session_lifetime: 6h
+session_lifetime = "6h"
 
 # Specify the name of the file to use in the CWD for setting environment variables (default ".renv")
-renv_filename: .env
+renv_filename = ".env"
 ```
 
 # direnv
