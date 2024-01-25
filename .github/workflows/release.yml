@@ -13,37 +13,37 @@ jobs:
   validate-tag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: test $(grep '^version' Cargo.toml | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p') = ${{ github.ref_name }}
 
   build-linux:
     runs-on: ubuntu-latest
     needs: validate-tag
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: cargo build --release
       - name: make tarball
         run: mkdir rudric-linux && cp target/release/rudric README.md rudric-linux && tar -czf rudric-linux.tar.gz rudric-linux
       - name: upload tarball
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: uploads
+          name: uploads-linux
           path: rudric-linux.tar.gz
 
   build-mac:
     runs-on: macOS-latest
     needs: validate-tag
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build
         run: cargo build --release
       - name: make zip
         run: mkdir rudric-mac && cp target/release/rudric README.md rudric-mac && zip -r rudric-mac.zip rudric-mac
       - name: upload zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: uploads
+          name: uploads-mac
           path: rudric-mac.zip
 
   release:
@@ -54,10 +54,11 @@ jobs:
     steps:
       - name: download artifacts
         id: download_artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: uploads
           path: uploads
+          pattern: uploads-*
+          merge-multiple: true
       - name: release
         uses: softprops/action-gh-release@v1
         with:
