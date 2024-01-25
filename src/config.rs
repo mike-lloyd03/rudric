@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fs, path::Path};
 
 use anyhow::Result;
 use duration_str::deserialize_option_duration_time;
@@ -16,15 +16,16 @@ pub struct Config {
 
 impl Config {
     pub fn load(config_dir: &Path) -> Result<Self> {
-        let config_file_path = config_dir.join("config.yaml");
-        let config_file = match std::fs::File::open(config_file_path) {
+        let config_file_path = config_dir.join("config.toml");
+
+        let config_string = match fs::read_to_string(config_file_path) {
             Ok(c) => c,
             Err(_) => {
                 return Ok(Self::default());
             }
         };
 
-        Ok(serde_yaml::from_reader(config_file)?)
+        Ok(toml::from_str(&config_string)?)
     }
 }
 
@@ -41,9 +42,9 @@ mod session_tests {
         let test_dir = "testdata/test_config1";
         std::fs::create_dir_all(test_dir)?;
 
-        let config_path = test_dir.to_string() + "/config.yaml";
+        let config_path = test_dir.to_string() + "/config.toml";
         let mut file = File::create(config_path)?;
-        file.write_all(b"default_shell: fish\nsession_lifetime: 6h")?;
+        file.write_all(b"default_shell = \"fish\"\nsession_lifetime = \"6h\"")?;
 
         let config = Config::load(Path::new(test_dir))?;
 
@@ -60,9 +61,9 @@ mod session_tests {
         let test_dir = "testdata/test_config2";
         std::fs::create_dir_all(test_dir)?;
 
-        let config_path = test_dir.to_string() + "/config.yaml";
+        let config_path = test_dir.to_string() + "/config.toml";
         let mut file = File::create(config_path)?;
-        file.write_all(b"default_shell: fish")?;
+        file.write_all(b"default_shell = \"fish\"")?;
 
         let config = Config::load(Path::new(test_dir))?;
 
