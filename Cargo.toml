@@ -30,7 +30,7 @@ uuid = { version = "1.7.0", features = ["v4"] }
 tempfile = "3.9.0"
 base64 = "0.21.7"
 regex = "1.10.3"
-tabled = { version = "0.15.0", features = ["color"] }
+tabled = { version = "0.15.0", features = ["ansi"] }
 time = "0.3.31"
 clap_complete = "4.4.9"
 duration-str = "0.7.1"
