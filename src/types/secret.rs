@@ -3,7 +3,7 @@ use orion::aead;
 use serde::Serialize;
 use sqlx::{prelude::*, Sqlite, SqlitePool};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 
 use crate::crypto;
 
@@ -46,7 +46,7 @@ impl Secret {
     }
 
     pub async fn store(&self, db: &SqlitePool) -> Result<()> {
-        sqlx::query!(
+        match sqlx::query!(
             "insert into secrets (name, value, description) values (?, ?, ?)",
             self.name,
             self.value,
@@ -54,9 +54,18 @@ impl Secret {
         )
         .execute(db)
         .await
-        .context("Failed to store secret")?;
-
-        Ok(())
+        {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                if e.to_string()
+                    .contains("UNIQUE constraint failed: secrets.name")
+                {
+                    bail!("Secret '{}' already exists", self.name)
+                } else {
+                    Err(e).context("Failed to store secret")
+                }
+            }
+        }
     }
 
     pub async fn update<'a, E>(&self, executor: E) -> Result<()>

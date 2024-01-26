@@ -59,7 +59,14 @@ Secrets can be created, fetched, edited, and deleted.
 rudric create <new_secret_name>
 ```
 
-A text editor will be opened (whatever is defined by `EDITOR` or `VISUAL` environment variables). Currently, this is the only way to create a secret. In the future, secrets can be created from the content of a file or by reading from stdin (piping from another process).
+A text editor will be opened (whatever is defined by `EDITOR` or `VISUAL` environment variables). Optionally, the user can create a secret from the content of a file with the `--file` flag. Or, if a session is active, the user can create a secret by piping text from another process:
+
+```bash
+pwgen -1 14 | rudric create <new_secret_name> -
+```
+
+> [!IMPORTANT]
+> A valid session token must be set for reading from a pipe to work correctly. Currently, the Rust crate `dialoguer` has a bug which prevents input prompts from being displayed correctly when data is piped into the program.
 
 The following other commands are supported:
 

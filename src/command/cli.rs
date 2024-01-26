@@ -21,14 +21,23 @@ pub enum Command {
     /// Set a master password and initialize the database
     Init,
 
-    /// Create a new secret
+    /// Create a new secret. Appending `-` at the end of the command will read the secret
+    /// content from stdin or a pipe. (Note: A session must be active)
     Create {
         /// The name of the secret (must be unique)
         name: String,
 
         /// Set the secret description
-        #[arg(short = 'd', long)]
+        #[arg(short, long)]
         description: Option<String>,
+
+        /// Read from stdin instead of opening the user's editor
+        #[arg(hide = true)]
+        stdin: Option<String>,
+
+        /// Read the secret value from a file
+        #[arg(short, long)]
+        file: Option<String>,
     },
 
     /// Fetch a secret value

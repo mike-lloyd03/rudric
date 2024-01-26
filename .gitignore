@@ -3,3 +3,4 @@
 data.db
 .renv
 data.db-*
+/testdata
