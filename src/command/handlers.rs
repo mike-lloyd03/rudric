@@ -1,6 +1,10 @@
-use std::{io::stdout, path::Path};
+use std::{
+    fs,
+    io::{self, stdout},
+    path::Path,
+};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::CommandFactory;
 use clap_complete::{generate, shells};
 use tabled::{
@@ -48,14 +52,41 @@ pub async fn handle_create(
     config_dir: &Path,
     name: String,
     description: Option<String>,
+    stdin: Option<String>,
+    file: Option<String>,
 ) -> Result<()> {
-    let app = App::new(config_dir, true).await?;
+    let app = match App::new(config_dir, true).await {
+        Ok(a) => a,
+        Err(e) => {
+            if e.to_string().contains("Bad file descriptor") {
+                bail!(
+                    "\nUnable to read from stdin. Try enabling a session first with 'rudric session'"
+                );
+            } else {
+                return Err(e);
+            }
+        }
+    };
 
-    let value_bytes = edit_text(b"", Some(&name))?;
-    if value_bytes.is_empty() {
-        bail!("Canceled")
-    }
-    let value = std::str::from_utf8(&value_bytes)?.to_string();
+    let value = if stdin == Some("-".to_string()) {
+        // This will fail if the user has to be prompted for a password (e.g. no active
+        // session)
+        // Dialoguer currently does not play well with reading from piped input
+        // https://github.com/console-rs/console/pull/200
+        let mut buffer = String::new();
+        let stdin = io::stdin();
+        stdin.read_line(&mut buffer)?;
+        buffer
+    } else if let Some(file) = file {
+        let err_msg = format!("Failed to load file '{file}'");
+        fs::read_to_string(file).context(err_msg)?
+    } else {
+        let value_bytes = edit_text(b"", Some(&name))?;
+        if value_bytes.is_empty() {
+            bail!("Canceled")
+        }
+        std::str::from_utf8(&value_bytes)?.to_string()
+    };
 
     let sec = ClearSecret::new(&name, &value, description);
     let encrypted = sec.to_encrypted(&app.master_key)?;

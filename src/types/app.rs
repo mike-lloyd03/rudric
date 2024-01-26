@@ -11,6 +11,13 @@ use super::{session::SessionToken, user::User};
 pub struct App {
     pub db: SqlitePool,
     pub master_key: aead::SecretKey,
+    pub auth_method: AuthMethod,
+}
+
+#[derive(PartialEq)]
+pub enum AuthMethod {
+    Password,
+    Session,
 }
 
 impl App {
@@ -27,7 +34,11 @@ impl App {
         if check_session {
             if let Ok(st) = SessionToken::from_env() {
                 let master_key = st.into_master_key(&db).await?;
-                return Ok(Self { db, master_key });
+                return Ok(Self {
+                    db,
+                    master_key,
+                    auth_method: AuthMethod::Session,
+                });
             }
         };
 
@@ -35,7 +46,11 @@ impl App {
         let user = Self::authenticate_user(&db, &input_password).await?;
         let master_key = user.master_key(&input_password)?;
 
-        Ok(Self { db, master_key })
+        Ok(Self {
+            db,
+            master_key,
+            auth_method: AuthMethod::Password,
+        })
     }
 
     pub async fn authenticate_user(db: &SqlitePool, password: &str) -> Result<User> {

@@ -27,40 +27,21 @@ async fn main() -> Result<()> {
     };
 
     match cli.command {
-        Command::Init => {
-            handle_init(&config_dir).await?;
-        }
-        Command::Create { name, description } => {
-            handle_create(&config_dir, name, description).await?
-        }
-        Command::Get { name, json } => {
-            handle_get(&config_dir, name, json).await?;
-        }
-        Command::Edit { name, description } => {
-            handle_edit(&config_dir, name, description).await?;
-        }
-        Command::Delete { name } => {
-            handle_delete(&config_dir, name).await?;
-        }
-        Command::Rename { name, new_name } => {
-            handle_rename(&config_dir, name, new_name).await?;
-        }
-        Command::List => {
-            handle_list(&config_dir).await?;
-        }
-        Command::Session(session_cmd) => {
-            handle_session(&config_dir, session_cmd).await?;
-        }
-        Command::Env { shell, file } => {
-            handle_env(&config_dir, shell, file).await?;
-        }
-        Command::ChangePassword => {
-            handle_change_password(&config_dir).await?;
-        }
-        Command::GenerateCompletions { shell } => {
-            handle_generate_completions(shell)?;
-        }
+        Command::Init => handle_init(&config_dir).await,
+        Command::Create {
+            name,
+            description,
+            stdin,
+            file,
+        } => handle_create(&config_dir, name, description, stdin, file).await,
+        Command::Get { name, json } => handle_get(&config_dir, name, json).await,
+        Command::Edit { name, description } => handle_edit(&config_dir, name, description).await,
+        Command::Delete { name } => handle_delete(&config_dir, name).await,
+        Command::Rename { name, new_name } => handle_rename(&config_dir, name, new_name).await,
+        Command::List => handle_list(&config_dir).await,
+        Command::Session(session_cmd) => handle_session(&config_dir, session_cmd).await,
+        Command::Env { shell, file } => handle_env(&config_dir, shell, file).await,
+        Command::ChangePassword => handle_change_password(&config_dir).await,
+        Command::GenerateCompletions { shell } => handle_generate_completions(shell),
     }
-
-    Ok(())
 }
