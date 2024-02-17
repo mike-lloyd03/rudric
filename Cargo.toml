@@ -32,7 +32,7 @@ base64 = "0.21.7"
 regex = "1.10.3"
 tabled = { version = "0.15.0", features = ["ansi"] }
 time = "0.3.34"
-clap_complete = "4.5.0"
+clap_complete = "4.5.1"
 duration-str = "0.7.1"
 toml = "0.8.10"
 
