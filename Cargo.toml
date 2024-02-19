@@ -37,7 +37,7 @@ duration-str = "0.7.1"
 toml = "0.8.10"
 
 [dev-dependencies]
-assert_cmd = "2.0.13"
+assert_cmd = "2.0.14"
 rexpect = "0.5.0"
 
 [profile.dev.package.sqlx-macros]
