@@ -106,7 +106,7 @@ pub async fn handle_get(config_dir: &Path, name: String, json: bool) -> Result<(
     if json {
         println!("{}", cleartext.to_json()?)
     } else {
-        println!("{}", cleartext.value)
+        print!("{}", cleartext.value)
     }
 
     Ok(())
