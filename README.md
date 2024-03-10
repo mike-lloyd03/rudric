@@ -140,10 +140,11 @@ $(rudric env direnv)
 
 Changing into the directory with both a `.envrc` and `.renv` file will automatically source your encrypted secrets in the environment.
 
-> [!IMPORTANT]
-> **FISH USERS**: If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail and your terminal will hang as input will not be passed to Rudric. This is due to a bug in `direnv` not being able to read stdin in `fish`.  
+> [!IMPORTANT] > **FISH USERS**: If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail and your terminal will hang as input will not be passed to Rudric. This is due to a bug in `direnv` not being able to read stdin in `fish`.  
 > https://github.com/direnv/direnv/issues/967  
-> https://github.com/direnv/direnv/issues/1237  
+> https://github.com/direnv/direnv/issues/1237
+>
+> As a workaround, you can add `stty sane` to the top of your `.envrc` file.
 
 # Crates
 
