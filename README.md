@@ -118,10 +118,10 @@ If the `RUDRIC_SESSION` token is set in the environment:
 Rudric can be configured with a toml file. By default, this file is stored in `XDG_CONFIG/rudric/config.toml` (`$HOME/.config/rudric/config.toml` on Linux and Mac). All config options are optional. An example config file might look like this:
 
 ```toml
-# Options are: bash, zsh, fish, nu
+# Options are: bash, zsh, fish, nu (default "bash")
 default_shell = "fish"
 
-# Specify the default length of time that a session token is valid for
+# Specify the default length of time that a session token is valid for (default "8h")
 session_lifetime = "6h"
 
 # Specify the name of the file to use in the CWD for setting environment variables (default ".renv")
@@ -141,7 +141,7 @@ $(rudric env direnv)
 Changing into the directory with both a `.envrc` and `.renv` file will automatically source your encrypted secrets in the environment.
 
 > [!IMPORTANT]
-> If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail as input will not be passed to Rudric. I'm working on a solution for this but for now, start a session with `rudric session` first.
+> If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail and your terminal will hang as input will not be passed to Rudric. I'm working on a solution for this but for now, start a session with `rudric session` first.
 
 # Crates
 
