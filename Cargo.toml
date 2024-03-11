@@ -34,7 +34,7 @@ tabled = { version = "0.15.0", features = ["ansi"] }
 time = "0.3.34"
 clap_complete = "4.5.1"
 duration-str = "0.7.1"
-toml = "0.8.10"
+toml = "0.8.11"
 
 [dev-dependencies]
 assert_cmd = "2.0.14"
