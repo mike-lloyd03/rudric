@@ -26,7 +26,7 @@ xdg = "2.5.2"
 dialoguer = "0.11.0"
 serde = "1.0.197"
 colored_json = "4.1.0"
-uuid = { version = "1.7.0", features = ["v4"] }
+uuid = { version = "1.8.0", features = ["v4"] }
 tempfile = "3.10.1"
 base64 = "0.21.7"
 regex = "1.10.3"
