@@ -29,7 +29,7 @@ colored_json = "4.1.0"
 uuid = { version = "1.8.0", features = ["v4"] }
 tempfile = "3.10.1"
 base64 = "0.21.7"
-regex = "1.10.3"
+regex = "1.10.4"
 tabled = { version = "0.15.0", features = ["ansi"] }
 time = "0.3.34"
 clap_complete = "4.5.1"
