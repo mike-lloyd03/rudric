@@ -12,6 +12,13 @@ Rudric makes managing secrets from the command line simple and straight-forward.
 
 I use `.env` files a lot to store sensitive data like API keys and personal access tokens. While `.env` files are "hidden" by default on Linux and Mac, this isn't really _security_. Anyone could grep the filesystem and find all sorts of plaintext secrets. Storing secrets encrypted, and only decrypting them when needed would be a much better solution.
 
+# Installation
+
+The following installation methods are currently supported:
+
+- `cargo install rudric`
+- `nix install github:mike-lloyd03/rudric` (Requires Flakes to be enabled)
+
 # Usage
 
 `.env` files can instead be replaced with `.renv` files which use bash-like syntax for defining environment variables.
@@ -140,11 +147,10 @@ $(rudric env direnv)
 
 Changing into the directory with both a `.envrc` and `.renv` file will automatically source your encrypted secrets in the environment.
 
-> [!IMPORTANT]
-> **FISH USERS**: If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail and your terminal will hang as input will not be passed to Rudric. This is due to a bug in `direnv` not being able to read stdin in `fish`.
-> 
+> [!IMPORTANT] > **FISH USERS**: If a valid session token is not set, changing into a directory with a trusted `.envrc` will prompt you for your password. This will fail and your terminal will hang as input will not be passed to Rudric. This is due to a bug in `direnv` not being able to read stdin in `fish`.
+>
 > As a workaround, you can add `stty sane` to the top of your `.envrc` file:
-> 
+>
 > ```bash
 > stty sane
 > $(rudric env direnv)
