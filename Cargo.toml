@@ -33,7 +33,7 @@ regex = "1.10.4"
 tabled = { version = "0.15.0", features = ["ansi"] }
 time = "0.3.36"
 clap_complete = "4.5.2"
-duration-str = "0.8.1"
+duration-str = "0.9.1"
 toml = "0.8.12"
 
 [dev-dependencies]
