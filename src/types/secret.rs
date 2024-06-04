@@ -9,7 +9,7 @@ use crate::crypto;
 
 pub const SECRET_NOT_FOUND: &str = "Secret not found";
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Clone)]
 pub struct Secret {
     pub id: Option<i64>,
     pub name: String,

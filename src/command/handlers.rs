@@ -7,6 +7,8 @@ use std::{
 use anyhow::{bail, Context, Result};
 use clap::CommandFactory;
 use clap_complete::{generate, shells};
+use dialoguer::theme::ColorfulTheme;
+use sqlx::SqlitePool;
 use tabled::{
     settings::{style::BorderColor, Color, Style},
     Table, Tabled,
@@ -100,7 +102,7 @@ pub async fn handle_create(
 pub async fn handle_get(config_dir: &Path, name: String, json: bool) -> Result<()> {
     let app = App::new(config_dir, true).await?;
 
-    let sec = Secret::get(&app.db, &name).await?;
+    let sec = select_secret(&app.db, &name).await?;
     let cleartext = sec.to_cleartext(&app.master_key)?;
 
     if json {
@@ -115,7 +117,7 @@ pub async fn handle_get(config_dir: &Path, name: String, json: bool) -> Result<(
 pub async fn handle_edit(config_dir: &Path, name: String, description: bool) -> Result<()> {
     let app = App::new(config_dir, true).await?;
 
-    let mut sec = Secret::get(&app.db, &name).await?;
+    let mut sec = select_secret(&app.db, &name).await?;
 
     if description {
         let old_desc = sec.description.unwrap_or_default();
@@ -157,7 +159,7 @@ pub async fn handle_edit(config_dir: &Path, name: String, description: bool) -> 
 pub async fn handle_delete(config_dir: &Path, name: String) -> Result<()> {
     let app = App::new(config_dir, true).await?;
 
-    let sec = Secret::get(&app.db, &name).await?;
+    let sec = select_secret(&app.db, &name).await?;
 
     let prompt_msg = format!("Delete secret '{}'?", sec.name);
     let confirm = prompt::confirm(&prompt_msg, false)?;
@@ -311,4 +313,36 @@ pub fn handle_generate_completions(shell: ShellType) -> Result<()> {
     };
 
     Ok(())
+}
+
+/// Prompts the user to select a secret if multiple secrets match the inputted name
+pub async fn select_secret(db: &SqlitePool, search_str: &str) -> Result<Secret> {
+    let mut secrets = vec![];
+    for secret in Secret::get_all(db).await? {
+        if secret.name == search_str {
+            return Ok(secret);
+        }
+        if secret
+            .name
+            .to_lowercase()
+            .contains(&search_str.to_lowercase())
+        {
+            secrets.push(secret)
+        }
+    }
+
+    if secrets.len() == 1 {
+        Ok(secrets.pop().unwrap())
+    } else {
+        let items: Vec<&str> = secrets.iter().map(|s| s.name.as_str()).collect();
+        let selection = dialoguer::FuzzySelect::with_theme(&ColorfulTheme::default())
+            .items(&items)
+            .with_prompt("Select secret")
+            .vim_mode(true)
+            .interact()?;
+        Ok(secrets
+            .get(selection)
+            .expect("Selected option should be in bounds")
+            .clone())
+    }
 }

@@ -3,7 +3,7 @@ use std::{env, fmt::Display};
 use anyhow::{bail, Context, Result};
 use base64::{engine::general_purpose::STANDARD_NO_PAD as b64, Engine};
 use orion::aead::SecretKey;
-use sqlx::{sqlite::SqliteRow, Execute, FromRow, Row, SqlitePool};
+use sqlx::{sqlite::SqliteRow, FromRow, Row, SqlitePool};
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -97,9 +97,6 @@ impl SessionKey {
             .execute(db)
             .await
             .context("Failed to delete expired session key")?;
-
-        println!("{}",sqlx::query!("delete from session_keys where expire_time < ?", now).sql());
-
 
         Ok(())
     }

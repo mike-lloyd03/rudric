@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::{bail, Result};
 use clap::Parser;
 
+use dialoguer::console::Term;
 use rudric::{
     command::{
         cli::{Cli, Command},
@@ -13,6 +14,9 @@ use rudric::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Ignore SIGINT so we can handle it ourselves
+    ctrlc::set_handler(move || {}).expect("Error setting Ctrl-C handler");
+
     let cli = Cli::parse();
 
     let config_dir = match cli.config_dir {
@@ -44,4 +48,8 @@ async fn main() -> Result<()> {
         Command::ChangePassword => handle_change_password(&config_dir).await,
         Command::GenerateCompletions { shell } => handle_generate_completions(shell),
     }
+    .map_err(|e| {
+        let _ = Term::stdout().show_cursor();
+        e
+    })
 }
