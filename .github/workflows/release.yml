@@ -31,20 +31,35 @@ jobs:
           name: uploads-linux
           path: rudric-linux.tar.gz
 
-  build-mac:
-    runs-on: macOS-latest
+  build-mac-x86-64:
+    runs-on: macOS-14-large
     needs: validate-tag
     steps:
       - uses: actions/checkout@v4
       - name: build
         run: cargo build --release
       - name: make zip
-        run: mkdir rudric-mac && cp target/release/rudric README.md rudric-mac && zip -r rudric-mac.zip rudric-mac
+        run: mkdir rudric-mac-x86-64 && cp target/release/rudric README.md rudric-mac-x86-64 && zip -r rudric-mac-x86-64.zip rudric-mac-x86-64
       - name: upload zip
         uses: actions/upload-artifact@v4
         with:
-          name: uploads-mac
-          path: rudric-mac.zip
+          name: uploads-mac-x86-64
+          path: rudric-mac-x86-64.zip
+
+  build-mac-arm64:
+    runs-on: macOS-14
+    needs: validate-tag
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: cargo build --release
+      - name: make zip
+        run: mkdir rudric-mac-arm64 && cp target/release/rudric README.md rudric-mac-arm64 && zip -r rudric-mac-arm64.zip rudric-mac-arm64
+      - name: upload zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: uploads-mac-arm64
+          path: rudric-mac-arm64.zip
 
   release:
     runs-on: ubuntu-latest
@@ -65,7 +80,8 @@ jobs:
           generate_release_notes: true
           files: |
             uploads/rudric-linux.tar.gz
-            uploads/rudric-mac.zip
+            uploads/rudric-mac-x86-64.zip
+            uploads/rudric-mac-arm64.zip
 
   publish:
     runs-on: ubuntu-latest
