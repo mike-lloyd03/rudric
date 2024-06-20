@@ -32,7 +32,7 @@ jobs:
           path: rudric-linux.tar.gz
 
   build-mac-x86-64:
-    runs-on: macOS-14-large
+    runs-on: macOS-13
     needs: validate-tag
     steps:
       - uses: actions/checkout@v4
