@@ -39,7 +39,7 @@ ctrlc = "3.4.4"
 
 [dev-dependencies]
 assert_cmd = "2.0.14"
-rexpect = "0.5.0"
+rexpect = "0.6.0"
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3
