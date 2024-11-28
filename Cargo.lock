@@ -312,7 +312,7 @@ dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -462,7 +462,7 @@ dependencies = [
  "fuzzy-matcher",
  "shell-words",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.50",
  "zeroize",
 ]
 
@@ -498,14 +498,14 @@ checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "duration-str"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "709d653e7c92498eb29fb86a2a6f0f3502b97530f33aedb32ef848d4d28b31a3"
+checksum = "f88959de2d447fd3eddcf1909d1f19fe084e27a056a6904203dc5d8b9e771c1e"
 dependencies = [
  "chrono",
  "rust_decimal",
  "serde",
- "thiserror",
+ "thiserror 2.0.3",
  "time",
  "winnow",
 ]
@@ -1195,14 +1195,14 @@ dependencies = [
  "proc-macro-error-attr2",
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.88"
+version = "1.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c3a7fc5db1e57d5a779a352c8cdb57b29aa4c40cc69c3a68a7fedc815fbf2f9"
+checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
 dependencies = [
  "unicode-ident",
 ]
@@ -1294,7 +1294,7 @@ dependencies = [
  "nix 0.27.1",
  "regex",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.50",
 ]
 
 [[package]]
@@ -1402,7 +1402,7 @@ checksum = "ad1e866f866923f252f05c889987993144fb74e722403468a4ebd70c3cd756c0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -1569,7 +1569,7 @@ dependencies = [
  "sha2",
  "smallvec",
  "sqlformat",
- "thiserror",
+ "thiserror 1.0.50",
  "time",
  "tokio",
  "tokio-stream",
@@ -1654,7 +1654,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror",
+ "thiserror 1.0.50",
  "time",
  "tracing",
  "uuid",
@@ -1694,7 +1694,7 @@ dependencies = [
  "smallvec",
  "sqlx-core",
  "stringprep",
- "thiserror",
+ "thiserror 1.0.50",
  "time",
  "tracing",
  "uuid",
@@ -1762,9 +1762,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.82"
+version = "2.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83540f837a8afc019423a8edb95b52a8effe46957ee402287f4292fae35be021"
+checksum = "44d46482f1c1c87acd84dea20c1bf5ebff4c757009ed6bf19cfd36fb10e92c4e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1831,7 +1831,16 @@ version = "1.0.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9a7210f5c9a7156bb50aa36aed4c95afb51df0df00713949448cf9e97d382d2"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.50",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c006c85c7651b3cf2ada4584faa36773bd07bac24acfb39f3c431b36d7e667aa"
+dependencies = [
+ "thiserror-impl 2.0.3",
 ]
 
 [[package]]
@@ -1842,7 +1851,18 @@ checksum = "266b2e40bc00e5a6c09c3584011e08b06f123c00362c92b975ba9843aaaa14b8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f077553d607adc1caf65430528a576c757a71ed73944b66ebb58ef2bbd243568"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -1925,7 +1945,7 @@ checksum = "693d596312e88961bc67d7f1f97af8a70227d9f90c31bba5806eec004978d752"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -1993,7 +2013,7 @@ checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -2394,7 +2414,7 @@ checksum = "9ce1b18ccd8e73a9321186f97e46f9f04b778851177567b1975109d26a08d2a6"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.82",
+ "syn 2.0.89",
 ]
 
 [[package]]
