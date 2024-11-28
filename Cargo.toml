@@ -25,7 +25,7 @@ orion = { version = "0.17.6", features = ["serde"] }
 xdg = "2.5.2"
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 serde = "1.0.200"
-colored_json = "4.1.0"
+colored_json = "5.0.0"
 uuid = { version = "1.8.0", features = ["v4"] }
 tempfile = "3.10.1"
 base64 = "0.21.7"
