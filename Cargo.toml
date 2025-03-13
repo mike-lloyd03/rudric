@@ -33,7 +33,7 @@ regex = "1.10.4"
 tabled = { version = "0.18.0", features = ["ansi"] }
 time = "0.3.36"
 clap_complete = "4.5.2"
-duration-str = "0.15.0"
+duration-str = "0.16.0"
 toml = "0.8.12"
 ctrlc = "3.4.4"
 
