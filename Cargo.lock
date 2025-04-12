@@ -1046,9 +1046,9 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
 name = "orion"
-version = "0.17.9"
+version = "0.17.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf2e0b749a7c5fb3d43f06f19eff59b253b5480fa146533676cea27c3606530b"
+checksum = "ccc95d369bc6b5cf404c562cd33de439ae9ca6dc4b044cd2625b2072ca0b81e4"
 dependencies = [
  "ct-codecs",
  "fiat-crypto",
