@@ -28,7 +28,7 @@ serde = "1.0.200"
 colored_json = "4.1.0"
 uuid = { version = "1.8.0", features = ["v4"] }
 tempfile = "3.10.1"
-base64 = "0.21.7"
+base64 = "0.22.0"
 regex = "1.10.4"
 tabled = { version = "0.20.0", features = ["ansi"] }
 time = "0.3.36"
